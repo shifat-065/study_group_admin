@@ -5185,8 +5185,6 @@ function CaptainDetailsBottomSheet({ sg, onClose, onEdit }: { sg: SubgroupData; 
           <div className="flex flex-col gap-1 min-w-0">
             <p className="font-['Noto_Sans',sans-serif] font-medium text-[18px] text-black leading-[26px] truncate" style={ns}>{sg.captain}</p>
             <div className="flex items-center gap-1.5">
-              <Star className="size-4 text-[#f5c518] fill-[#f5c518] shrink-0" />
-              <span className="font-['Noto_Sans',sans-serif] font-semibold text-[14px] text-black leading-[20px]">{sg.captainRating.toFixed(1)}</span>
               <span className="font-['Noto_Sans',sans-serif] font-normal text-[14px] text-[#787878] leading-[20px]">Captain since: {sg.captainSince}</span>
             </div>
           </div>
