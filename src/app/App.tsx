@@ -3157,12 +3157,33 @@ function AdminMyGroupScreen({ group, onBack }: { group: Group; onBack: () => voi
   const [linkUrls, setLinkUrls] = useState<Record<string, string>>({ facebook: DEFAULT_GROUP_LINK_URL, discussion: DEFAULT_GROUP_LINK_URL });
   const [editingDiscussion, setEditingDiscussion] = useState(false);
   const [showFormula, setShowFormula] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState(false);
+  const statCardRef = useRef<HTMLDivElement>(null);
 
   function copyLink(id: string, url: string) {
     navigator.clipboard?.writeText(url).then(() => {
       setCopiedId(id);
       setTimeout(() => setCopiedId(c => (c === id ? null : c)), 1500);
     });
+  }
+
+  async function exportStatCardAsImage() {
+    if (!statCardRef.current || exporting) return;
+    setExporting(true);
+    setExportError(false);
+    try {
+      const { toPng } = await import("html-to-image");
+      const dataUrl = await toPng(statCardRef.current, { backgroundColor: "#ffffff", pixelRatio: 2 });
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = `${group.name.replace(/\s+/g, "-").toLowerCase()}-stats.png`;
+      link.click();
+    } catch {
+      setExportError(true);
+    } finally {
+      setExporting(false);
+    }
   }
 
   const ratingPct = (group.adminRating / 5) * 100;
@@ -3193,6 +3214,7 @@ function AdminMyGroupScreen({ group, onBack }: { group: Group; onBack: () => voi
       <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col gap-6">
         {/* Stat card */}
         <div className="border border-[#e3e3e3] rounded-[16px] flex flex-col gap-4 items-center pt-3 px-3 pb-3">
+        <div ref={statCardRef} className="flex flex-col gap-4 items-center w-full bg-white">
           <div className="flex gap-3 items-start w-full">
             <GroupLogo size={60} seed={group.id} />
             <div className="flex-1 min-w-0 flex flex-col gap-2">
@@ -3252,10 +3274,17 @@ function AdminMyGroupScreen({ group, onBack }: { group: Group; onBack: () => voi
               <p className="font-['Noto_Sans',sans-serif] text-[12px] text-[#787878] leading-4">Rating</p>
             </div>
           </div>
+        </div>
 
-          <button className="h-12 flex items-center justify-center gap-2 px-4 py-2.5 rounded-full active:bg-gray-50 transition-colors">
+          <button
+            onClick={exportStatCardAsImage}
+            disabled={exporting}
+            className="h-12 flex items-center justify-center gap-2 px-4 py-2.5 rounded-full active:bg-gray-50 transition-colors disabled:opacity-60"
+          >
             <Download className="size-5 text-[#1441cc]" strokeWidth={1.5} />
-            <span className="font-['Noto_Sans',sans-serif] font-medium text-[14px] text-[#1441cc] leading-5">Export as image</span>
+            <span className="font-['Noto_Sans',sans-serif] font-medium text-[14px] text-[#1441cc] leading-5">
+              {exporting ? "Exporting…" : exportError ? "Failed, tap to retry" : "Export as image"}
+            </span>
           </button>
         </div>
 
