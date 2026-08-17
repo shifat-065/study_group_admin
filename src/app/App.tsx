@@ -4122,12 +4122,12 @@ function GroupRankContent({ monthIndex, selectedMonth }: { monthIndex: number; s
           {/* Stats */}
           <div className="flex gap-4">
             {[
-              { val: "103", label: "Members", center: false },
-              { val: `${d.attendance}%`, label: "Attendance", center: true },
-              { val: String(d.exams), label: "Exams", center: false },
-              { val: `${d.rating}%`, label: "Rating", center: true },
-            ].map(({ val, label, center }) => (
-              <div key={label} className={`flex-1 flex flex-col ${center ? "items-center" : ""}`}>
+              { val: "103", label: "Members" },
+              { val: `${d.attendance}%`, label: "Attendance" },
+              { val: String(d.exams), label: "Exams" },
+              { val: `${d.rating}%`, label: "Rating" },
+            ].map(({ val, label }) => (
+              <div key={label} className="flex-1 flex flex-col items-center">
                 <p className="font-['Noto_Sans',sans-serif] font-medium text-[16px] text-black leading-[24px]" style={ns}>{val}</p>
                 <p className="font-['Noto_Sans',sans-serif] font-normal text-[12px] text-[#787878] leading-[16px]" style={ns}>{label}</p>
               </div>
