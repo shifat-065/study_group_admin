@@ -3696,55 +3696,6 @@ const DAILY_GOAL_PCTS = [
   31, 36, 49, 74, 49, 31, 49, 36, 31, 49, 25, 49, 49, 85, 25, 25,
 ];
 
-type RankSort = "attendance" | "position" | "name" | "memberCount";
-
-const RANK_SORT_OPTIONS: Array<{ id: RankSort; label: string }> = [
-  { id: "attendance", label: "Attendance" },
-  { id: "position", label: "Position" },
-  { id: "name", label: "Name" },
-  { id: "memberCount", label: "Member Count" },
-];
-
-function RankSortBottomSheet({ value, onSelect, onClose }: { value: RankSort; onSelect: (v: RankSort) => void; onClose: () => void }) {
-  const ns = { fontVariationSettings: '"CTGR" 0, "wdth" 100' };
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
-      className="absolute inset-0 z-50 flex flex-col justify-end bg-black/40"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ y: "100%" }}
-        animate={{ y: 0 }}
-        exit={{ y: "100%" }}
-        transition={{ type: "tween", duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
-        className="bg-white rounded-tl-[16px] rounded-tr-[16px] shadow-[0px_4px_8px_3px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden pb-4"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex flex-col items-center p-4 shrink-0">
-          <div className="bg-[#787878] h-1 rounded-full w-8" />
-        </div>
-        <div className="flex flex-col">
-          {RANK_SORT_OPTIONS.map(opt => (
-            <button
-              key={opt.id}
-              onClick={() => { onSelect(opt.id); onClose(); }}
-              className="h-14 flex items-center gap-4 px-4 active:bg-gray-50 transition-colors text-left"
-            >
-              <div className="relative size-5 shrink-0 rounded-full border-2 flex items-center justify-center" style={{ borderColor: value === opt.id ? "#1441cc" : "#787878" }}>
-                {value === opt.id && <div className="size-2.5 rounded-full bg-[#1441cc]" />}
-              </div>
-              <span className="font-['Noto_Sans',sans-serif] font-medium text-[16px] text-black leading-6" style={ns}>{opt.label}</span>
-            </button>
-          ))}
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-}
 
 function RankGroupDetailSheet({ group, gp, onClose }: { group: typeof RANK_GROUPS[number]; gp: string; onClose: () => void }) {
   const ns = { fontVariationSettings: '"CTGR" 0, "wdth" 100' };
@@ -4019,8 +3970,6 @@ function MonthPickerModal({
 function GroupRankContent({ monthIndex, selectedMonth }: { monthIndex: number; selectedMonth: Date }) {
   const ns = { fontVariationSettings: '"CTGR" 0, "wdth" 100' };
   const [showAdminDetails, setShowAdminDetails] = useState(false);
-  const [rankSort, setRankSort] = useState<RankSort>("position");
-  const [sortingRank, setSortingRank] = useState(false);
   const [selectedRankGroup, setSelectedRankGroup] = useState<number | null>(null);
   const [showFormula, setShowFormula] = useState(false);
 
@@ -4039,15 +3988,6 @@ function GroupRankContent({ monthIndex, selectedMonth }: { monthIndex: number; s
 
   const d = MONTHLY_RANK_DATA[monthIndex];
 
-  const sortedLeaderboard = d.leaderboard.slice().sort((a, b) => {
-    const ga = RANK_GROUPS[a.g];
-    const gb = RANK_GROUPS[b.g];
-    if (rankSort === "attendance") return gb.attendance - ga.attendance;
-    if (rankSort === "name") return ga.name.localeCompare(gb.name);
-    if (rankSort === "memberCount") return gb.members - ga.members;
-    return 0; // "position" — keep the authored leaderboard order
-  });
-
   return (
     <div className="flex flex-col gap-6 items-center py-4">
       <AnimatePresence>
@@ -4058,9 +3998,6 @@ function GroupRankContent({ monthIndex, selectedMonth }: { monthIndex: number; s
             since="17 Jul 2026"
             onClose={() => setShowAdminDetails(false)}
           />
-        )}
-        {sortingRank && (
-          <RankSortBottomSheet value={rankSort} onSelect={setRankSort} onClose={() => setSortingRank(false)} />
         )}
         {showFormula && <GroupPointsFormulaSheet onClose={() => setShowFormula(false)} />}
         {selectedRankGroup !== null && (
@@ -4183,18 +4120,11 @@ function GroupRankContent({ monthIndex, selectedMonth }: { monthIndex: number; s
 
       {/* Leaderboard */}
       <div className="w-full flex flex-col gap-4 pb-4">
-        <div className="px-4 flex items-center justify-between h-10">
+        <div className="px-4 flex items-center h-10">
           <span className="font-['Noto_Sans',sans-serif] font-medium text-[16px] text-black leading-[24px] tracking-[0.15px]" style={ns}>Leaderboard</span>
-          <button
-            onClick={() => setSortingRank(true)}
-            aria-label="Sort leaderboard"
-            className="size-12 flex items-center justify-center rounded-full active:bg-gray-100 transition-colors -mr-3"
-          >
-            <ArrowUpDown className="size-5 text-black" strokeWidth={1.5} />
-          </button>
         </div>
         <div className="flex flex-col gap-2 px-4">
-          {sortedLeaderboard.map((entry, i) => {
+          {d.leaderboard.map((entry, i) => {
             const group = RANK_GROUPS[entry.g];
             return (
               <button
