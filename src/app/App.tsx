@@ -3714,6 +3714,23 @@ const DAILY_GOAL_PCTS = [
   31, 36, 49, 74, 49, 31, 49, 36, 31, 49, 25, 49, 49, 85, 25, 25,
 ];
 
+// A weekly exam (name contains "সাপ্তাহিক") only runs on ~4 fixed days across the month.
+// Every other exam runs on a random subset of days that differs exam to exam — there's no
+// fixed schedule — but stays the same every time you open that exam's own screen, seeded
+// off its name so it doesn't reshuffle on every render.
+function examChartPcts(examName: string): number[] {
+  if (examName.includes("সাপ্তাহিক")) {
+    return DAILY_GOAL_PCTS.map((pct, i) => (i % 7 === 6 ? pct : 0));
+  }
+  let seed = 0;
+  for (let i = 0; i < examName.length; i++) seed = (seed * 31 + examName.charCodeAt(i)) >>> 0;
+  return DAILY_GOAL_PCTS.map((pct, i) => {
+    const x = Math.sin(seed + i * 97.13) * 10000;
+    const rand = x - Math.floor(x);
+    return rand < 0.6 ? pct : 0;
+  });
+}
+
 
 function RankGroupDetailSheet({ group, gp, onClose }: { group: typeof RANK_GROUPS[number]; gp: string; onClose: () => void }) {
   const ns = { fontVariationSettings: '"CTGR" 0, "wdth" 100' };
@@ -6353,12 +6370,7 @@ function MonthlyGoalExamDetailScreen({ examName, group, sg, override, examTotals
   const monthRemaining = Math.max(monthTotal - monthAttended, 0);
   const monthBarPct = goalPct;
 
-  // A weekly exam (নাম-এ "সাপ্তাহিক") only runs on ~4-5 days across the month, so its chart
-  // should only light up those days instead of all 31 — the rest stay flat at 0.
-  const isWeekly = examName.includes("সাপ্তাহিক");
-  const chartPcts = isWeekly
-    ? DAILY_GOAL_PCTS.map((pct, i) => (i % 7 === 6 ? pct : 0))
-    : DAILY_GOAL_PCTS;
+  const chartPcts = examChartPcts(examName);
 
   const scopedMembers = MEMBER_LIST.filter(m => !removedIds.has(m.memberId) && (override || m.subgroup === sg.letter));
   // Scale each member's shown attendance so the scoped group's average matches this exam's
@@ -6475,7 +6487,11 @@ function MonthlyGoalExamDetailScreen({ examName, group, sg, override, examTotals
                 </div>
                 <div className="grid gap-x-1 h-[100px] items-end" style={{ gridTemplateColumns: `repeat(${chartPcts.length}, minmax(0, 1fr))` }}>
                   {chartPcts.map((pct, i) => (
-                    <div key={i} className="rounded-t-sm" style={{ height: `${pct}px`, backgroundColor: pct > 0 ? zoneBarColor(pct) : "#e3e3e3" }} />
+                    <div key={i} className="relative h-full w-full rounded-full overflow-hidden bg-[#e3e3e3]">
+                      {pct > 0 && (
+                        <div className="absolute bottom-0 left-0 right-0 rounded-full" style={{ height: `${pct}%`, backgroundColor: zoneBarColor(pct) }} />
+                      )}
+                    </div>
                   ))}
                 </div>
                 <div className="flex items-center justify-between">
