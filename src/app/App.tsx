@@ -4122,7 +4122,11 @@ function GroupRankContent({ monthIndex, selectedMonth }: { monthIndex: number; s
             {/* Bars — one per day of the month */}
             <div className="grid gap-x-1 h-[100px] items-end" style={{ gridTemplateColumns: `repeat(${DAILY_GOAL_PCTS.length}, minmax(0, 1fr))` }}>
               {DAILY_GOAL_PCTS.map((pct, i) => (
-                <div key={i} className="rounded-t-sm" style={{ height: `${pct}px`, backgroundColor: zoneBarColor(pct) }} />
+                <div key={i} className="relative h-full w-full rounded-full overflow-hidden bg-[#e3e3e3]">
+                  {pct > 0 && (
+                    <div className="absolute bottom-0 left-0 right-0 rounded-full" style={{ height: `${pct}%`, backgroundColor: zoneBarColor(pct) }} />
+                  )}
+                </div>
               ))}
             </div>
             {/* Day labels */}
