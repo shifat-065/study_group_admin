@@ -4376,7 +4376,7 @@ const ZONES: Record<Zone, { label: string; subtitle: string; bg: string; border:
 // ── Subgroup data ─────────────────────────────────────────────────────────────
 
 const SUBGROUPS = [
-  { letter: "A", captain: "Atiqul Haque", members: 10, attended: 6, goalPct: 60.0, isMyGroup: true, captainRating: 4.5, captainSince: "17 Jul 2026" },
+  { letter: "A", captain: "Atiqul Haque", members: 10, attended: 10, goalPct: 96.0, isMyGroup: true, captainRating: 4.5, captainSince: "17 Jul 2026" },
   { letter: "B", captain: "Shajenur khatun", members: 6, attended: 3, goalPct: 50.5, isMyGroup: false, captainRating: 4.5, captainSince: "17 Jul 2026" },
   { letter: "C", captain: "Anik Mahmud", members: 8, attended: 2, goalPct: 20.0, isMyGroup: false, captainRating: 4.5, captainSince: "17 Jul 2026" },
   { letter: "D", captain: "🙉🙊🙈মেহেজাবীন নুসরাত স্মৃতি✨", members: 12, attended: 10, goalPct: 85.0, isMyGroup: false, captainRating: 4.5, captainSince: "17 Jul 2026" },
