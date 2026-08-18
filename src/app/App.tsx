@@ -5299,7 +5299,7 @@ function SubgroupDetailScreen({ onBack, sg, groupName, onTodayGoal, onMonthlyGoa
   const [removing, setRemoving] = useState<Member | null>(null);
   const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
 
-  const sortedMembers = MEMBER_LIST.filter(m => !removedIds.has(m.memberId)).sort((a, b) => (
+  const sortedMembers = MEMBER_LIST.filter(m => m.subgroup === sg.letter && !removedIds.has(m.memberId)).sort((a, b) => (
     sortBy === "alphabetical" ? a.name.localeCompare(b.name) : b.pct - a.pct
   ));
 
