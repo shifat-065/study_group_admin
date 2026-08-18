@@ -4381,6 +4381,9 @@ const SUBGROUPS = [
   { letter: "C", captain: "Anik Mahmud", members: 103, attended: 200, goalPct: 20.0, isMyGroup: false, captainRating: 4.5, captainSince: "17 Jul 2026" },
   { letter: "D", captain: "🙉🙊🙈মেহেজাবীন নুসরাত স্মৃতি✨", members: 103, attended: 200, goalPct: 85.0, isMyGroup: false, captainRating: 4.5, captainSince: "17 Jul 2026" },
   { letter: "E", captain: "অর্থহীন জীবন", members: 103, attended: 200, goalPct: 70.0, isMyGroup: false, captainRating: 4.5, captainSince: "17 Jul 2026" },
+  { letter: "F", captain: "তাহমিনা সুলতানা", members: 103, attended: 200, goalPct: 45.0, isMyGroup: false, captainRating: 4.5, captainSince: "17 Jul 2026" },
+  { letter: "G", captain: "রায়হান আকরাম", members: 103, attended: 200, goalPct: 92.0, isMyGroup: false, captainRating: 4.5, captainSince: "17 Jul 2026" },
+  { letter: "H", captain: "ঐশী হক", members: 103, attended: 200, goalPct: 33.0, isMyGroup: false, captainRating: 4.5, captainSince: "17 Jul 2026" },
 ];
 
 // ── Shared: progress bar for subgroup goal ────────────────────────────────────
