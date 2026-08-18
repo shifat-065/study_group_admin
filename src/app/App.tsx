@@ -4342,6 +4342,17 @@ function pctToChip(pct: number): AttendanceChip {
   return pct >= 75 ? "green" : pct >= 40 ? "yellow" : "red";
 }
 
+// Which subgroup a member belongs to, shown on every row (not just as a section header when
+// sorted by subgroup) — spelled out as "Sub X" rather than a bare letter so it can't be
+// mistaken for the attendance rating badge.
+function SubgroupTag({ letter }: { letter: string }) {
+  return (
+    <div className="rounded-[4px] h-6 px-2 flex items-center justify-center shrink-0 bg-[#eaeef6]">
+      <span className="font-['Noto_Sans',sans-serif] font-medium text-[11px] text-[#484848] leading-4 whitespace-nowrap">Sub {letter}</span>
+    </div>
+  );
+}
+
 // ── Admin: attendance zones ───────────────────────────────────────────────────
 // A separate classification from the green/yellow/red attendance chip above — zones use
 // their own thresholds (and "probation" overlaps "red"), matching the Members hub in Figma.
@@ -4889,8 +4900,9 @@ function GroupMembersScreen({ onBack, group, zone, isAdmin, title, hideCountRow 
                     {member.name}
                   </span>
                 </div>
-                {/* Attendance percentage */}
+                {/* Subgroup + attendance percentage */}
                 <div className="flex items-center gap-1 shrink-0 ml-2">
+                  <SubgroupTag letter={member.subgroup} />
                   {/* Attendance chip — same design as the percentage chip in the Available Groups list */}
                   <div
                     className="rounded-[4px] h-6 px-2 flex items-center justify-center shrink-0"
@@ -6193,6 +6205,7 @@ function ExamAttendanceMembersScreen({ examName, attended, onBack, title = "Exam
                       </span>
                     </div>
                     <div className="flex items-center gap-1 shrink-0 ml-2">
+                      <SubgroupTag letter={member.subgroup} />
                       <div className="rounded-[16px] px-3 py-1 shrink-0 whitespace-nowrap" style={{ backgroundColor: chip.bg }}>
                         <span
                           className="font-['Noto_Sans',sans-serif] font-medium text-[12px] leading-[16px]"
@@ -6397,6 +6410,7 @@ function MonthlyGoalExamDetailScreen({ examName, group, onBack }: { examName: st
                       </span>
                     </div>
                     <div className="flex items-center gap-1 shrink-0 ml-2">
+                      <SubgroupTag letter={member.subgroup} />
                       <div className="rounded-[4px] h-6 px-2 flex items-center justify-center shrink-0" style={{ backgroundColor: chip.bg }}>
                         <span className="font-['Noto_Sans',sans-serif] text-[12px] font-normal" style={{ color: chip.text }}>{member.pct.toFixed(1)}%</span>
                       </div>
