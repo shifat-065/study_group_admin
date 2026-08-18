@@ -4865,8 +4865,16 @@ function GroupMembersScreen({ onBack, group, zone, isAdmin, title, hideCountRow 
       <div className="flex-1 overflow-y-auto">
         {filtered.map((member, i) => {
           const chip = CHIP_STYLES[pctToChip(member.pct)];
+          const showSubgroupHeader = sortBy === "subgroup" && (i === 0 || filtered[i - 1].subgroup !== member.subgroup);
           return (
             <div key={member.memberId}>
+              {showSubgroupHeader && (
+                <div className="px-4 pt-3 pb-1 bg-[#f4f6fa]">
+                  <span className="font-['Noto_Sans',sans-serif] font-medium text-[12px] text-[#787878] leading-4" style={ns}>
+                    Subgroup {member.subgroup}
+                  </span>
+                </div>
+              )}
               <button
                 onClick={() => setSelected(member)}
                 className="w-full flex items-center justify-between px-4 py-3 bg-white active:bg-gray-50 transition-colors text-left"
@@ -6162,8 +6170,16 @@ function ExamAttendanceMembersScreen({ examName, attended, onBack, title = "Exam
             {filtered.map((member, i) => {
               const hasAttended = attendedIds.has(member.memberId);
               const chip = hasAttended ? CHIP_STYLES.green : CHIP_STYLES.yellow;
+              const showSubgroupHeader = sortBy === "subgroup" && (i === 0 || filtered[i - 1].subgroup !== member.subgroup);
               return (
                 <div key={member.memberId}>
+                  {showSubgroupHeader && (
+                    <div className="pt-3 pb-1">
+                      <span className="font-['Noto_Sans',sans-serif] font-medium text-[12px] text-[#787878] leading-4" style={ns}>
+                        Subgroup {member.subgroup}
+                      </span>
+                    </div>
+                  )}
                   <button
                     onClick={() => setSelected(member)}
                     className="w-full flex items-center justify-between py-3 active:bg-gray-50 transition-colors text-left"
@@ -6362,8 +6378,16 @@ function MonthlyGoalExamDetailScreen({ examName, group, onBack }: { examName: st
           <div className="flex flex-col">
             {filtered.map((member, i) => {
               const chip = CHIP_STYLES[pctToChip(member.pct)];
+              const showSubgroupHeader = sortBy === "subgroup" && (i === 0 || filtered[i - 1].subgroup !== member.subgroup);
               return (
                 <div key={member.memberId}>
+                  {showSubgroupHeader && (
+                    <div className="pt-3 pb-1">
+                      <span className="font-['Noto_Sans',sans-serif] font-medium text-[12px] text-[#787878] leading-4" style={ns}>
+                        Subgroup {member.subgroup}
+                      </span>
+                    </div>
+                  )}
                   <button
                     onClick={() => setSelected(member)}
                     className="w-full flex items-center justify-between py-3 active:bg-gray-50 transition-colors text-left"
