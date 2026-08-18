@@ -4957,9 +4957,6 @@ const EXAM_LIST: ExamListItem[] = [
   { name: "১৪০ দিনে ৪৭তম বিসিএস প্রস্তুতি", attended: 6, total: MEMBER_LIST.length },
   { name: "গুরুত্বপূর্ণ টপিকের উপর পরীক্ষা", attended: 10, total: MEMBER_LIST.length },
   { name: "ব্যাংক নিয়োগ প্রস্তুতি - লং কোর্স", attended: 5, total: MEMBER_LIST.length },
-  { name: "২০২২ সাল ভিত্তিক সিনিয়র অফিসার নিয়োগ প্রস্তুতি", attended: 7, total: MEMBER_LIST.length },
-  { name: "ব্যাংক ডেইলি কুইজ", attended: 9, total: MEMBER_LIST.length },
-  { name: "ব্যাংক মডেল টেস্ট [সাপ্তাহিক]", attended: 4, total: MEMBER_LIST.length },
 ];
 
 type GoalMode = "today" | "monthly";
