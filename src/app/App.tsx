@@ -5027,22 +5027,38 @@ function GoalDetailScreen({ mode, sg, onBack, onSelectExam, onViewAttendance, ov
     attended = Math.round(bigCount * goalPct / 100);
     remaining = Math.max(bigCount - attended, 0);
 
-    // Split bigCount evenly across the exam rows (largest-remainder, so it sums back to
-    // bigCount exactly), then split attended the same way across those per-row totals —
-    // so both the row totals and the row attended counts always sum to the numbers shown
-    // in the summary card above, at any scale (a single day's total or a month's).
+    // Split bigCount unevenly across the exam rows (weighted, largest-remainder rounding so
+    // it still sums back to bigCount exactly) — real exams don't all draw the same number of
+    // attempts, so each row gets a distinct-looking share instead of ~n identical numbers.
+    // Attended is split the same way across those per-row totals, so both the row totals and
+    // the row attended counts always sum to the numbers shown in the summary card above.
     const n = examList.length;
-    const baseTotal = Math.floor(bigCount / n);
-    const totalRemainder = bigCount - baseTotal * n;
-    const rowTotals = Array.from({ length: n }, (_, i) => baseTotal + (i < totalRemainder ? 1 : 0));
+    const weights = Array.from({ length: n }, (_, i) => 0.65 + ((i * 53 + 17) % 71) / 100);
+    const weightSum = weights.reduce((a, b) => a + b, 0);
+    const distribute = (n_: number, weightSum_: number, count: number) => {
+      const raw = weights.map(w => (count * w) / weightSum_);
+      const floors = raw.map(Math.floor);
+      const used = floors.reduce((a, b) => a + b, 0);
+      const remainder = count - used;
+      const order = raw.map((v, i) => ({ i, frac: v - floors[i] })).sort((a, b) => b.frac - a.frac);
+      const result = [...floors];
+      for (let k = 0; k < remainder; k++) result[order[k].i] += 1;
+      return result;
+    };
+    const rowTotals = distribute(n, weightSum, bigCount);
+    const rowAttendedRaw = rowTotals.map((t, i) => Math.min(t, Math.round(t * goalPct / 100)));
+    const rowAttendedSum = rowAttendedRaw.reduce((a, b) => a + b, 0);
+    let attendedDiff = attended - rowAttendedSum;
+    const rowAttended = [...rowAttendedRaw];
+    // Nudge the rounded per-row attended counts so they sum exactly to `attended`, without
+    // pushing any row below 0 or above its own total.
+    for (let i = 0; attendedDiff !== 0 && i < n * 4; i++) {
+      const idx = i % n;
+      if (attendedDiff > 0 && rowAttended[idx] < rowTotals[idx]) { rowAttended[idx]++; attendedDiff--; }
+      else if (attendedDiff < 0 && rowAttended[idx] > 0) { rowAttended[idx]--; attendedDiff++; }
+    }
 
-    let toDistribute = attended;
-    examRows = examList.map((exam, i) => {
-      const rowsLeft = n - i;
-      const share = Math.max(0, Math.min(rowTotals[i], Math.round(toDistribute / rowsLeft)));
-      toDistribute -= share;
-      return { ...exam, total: rowTotals[i], attended: share };
-    });
+    examRows = examList.map((exam, i) => ({ ...exam, total: rowTotals[i], attended: rowAttended[i] }));
   }
   const barPct = goalPct;
 
@@ -6313,7 +6329,7 @@ function ExamAttendanceMembersScreen({ examName, attended, onBack, title = "Exam
 // Reached by tapping a mandatory exam from the admin's Monthly Goal screen — richer than the
 // Today's Goal exam view: live-exam stats + the 31-day goal chart, then a member list
 // sorted/searched like Group Members (tap a row for the same detail sheet).
-function MonthlyGoalExamDetailScreen({ examName, group, sg, override, onBack }: { examName: string; group: Group; sg: SubgroupData; override?: GoalDetailOverride; onBack: () => void }) {
+function MonthlyGoalExamDetailScreen({ examName, group, sg, override, examTotals, onBack }: { examName: string; group: Group; sg: SubgroupData; override?: GoalDetailOverride; examTotals?: { total: number; attended: number }; onBack: () => void }) {
   const ns = { fontVariationSettings: '"CTGR" 0, "wdth" 100' };
   const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState("");
@@ -6323,15 +6339,28 @@ function MonthlyGoalExamDetailScreen({ examName, group, sg, override, onBack }: 
   const [removing, setRemoving] = useState<Member | null>(null);
   const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
 
-  // Group-level entry (override set) shows the whole group; reached from a specific
-  // subgroup's Monthly Goal, only that subgroup's own members/stats should show here.
-  const goalPct = override ? override.goalPct : sg.monthlyGoalPct;
-  const monthTotal = override ? override.bigCount : sg.members * 4;
-  const monthAttended = override ? override.attended : Math.round(monthTotal * goalPct / 100);
+  // Group-level entry (override set) shows the whole group. Reached by tapping a specific
+  // exam row from a subgroup's Monthly Goal, examTotals carries that row's own total/attended
+  // (matching the number the user just tapped) instead of a separately recomputed figure.
+  const monthTotal = override ? override.bigCount : examTotals ? examTotals.total : sg.members * 4;
+  const monthAttended = override ? override.attended : examTotals ? examTotals.attended : Math.round(monthTotal * sg.monthlyGoalPct / 100);
+  const goalPct = override ? override.goalPct : monthTotal > 0 ? (monthAttended / monthTotal) * 100 : 0;
   const monthRemaining = override ? override.remaining : Math.max(monthTotal - monthAttended, 0);
-  const monthBarPct = override ? override.barPct : monthTotal > 0 ? (monthAttended / monthTotal) * 100 : 0;
+  const monthBarPct = override ? override.barPct : goalPct;
 
-  const remaining = MEMBER_LIST.filter(m => !removedIds.has(m.memberId) && (override || m.subgroup === sg.letter));
+  const scopedMembers = MEMBER_LIST.filter(m => !removedIds.has(m.memberId) && (override || m.subgroup === sg.letter));
+  // Scale each member's shown attendance so the scoped group's average matches this exam's
+  // own percentage, instead of the members' unrelated raw overall pct.
+  const remaining = (() => {
+    if (scopedMembers.length === 0) return scopedMembers;
+    const currentAvg = scopedMembers.reduce((s, m) => s + m.pct, 0) / scopedMembers.length;
+    if (currentAvg === 0) return scopedMembers;
+    const scale = goalPct / currentAvg;
+    return scopedMembers.map(m => {
+      const pct = Math.min(100, Math.max(0, Math.round(m.pct * scale * 10) / 10));
+      return { ...m, pct, chip: pctToChip(pct) };
+    });
+  })();
   const filtered = (query.trim() ? remaining.filter(m => m.name.toLowerCase().includes(query.trim().toLowerCase())) : remaining)
     .slice()
     .sort((a, b) => {
@@ -6525,6 +6554,7 @@ function PrototypeApp() {
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(GROUPS[0]);
   const [selectedSubgroup, setSelectedSubgroup] = useState<SubgroupData | null>(null);
   const [selectedExamName, setSelectedExamName] = useState<string | null>(null);
+  const [selectedExamTotals, setSelectedExamTotals] = useState<{ total: number; attended: number } | null>(null);
   const [selectedExamAttended, setSelectedExamAttended] = useState(0);
   const [selectedExamSubgroupLetter, setSelectedExamSubgroupLetter] = useState<string | null>(null);
   const [memberAttendanceSubgroupLetter, setMemberAttendanceSubgroupLetter] = useState<string | null>(null);
@@ -7098,7 +7128,7 @@ function PrototypeApp() {
               sg={selectedSubgroup}
               override={todayGoalOverride ?? undefined}
               onBack={goBack}
-              onSelectExam={(exam) => { setSelectedExamName(exam.name); goTo("monthlyGoalExamDetail"); }}
+              onSelectExam={(exam) => { setSelectedExamName(exam.name); setSelectedExamTotals(todayGoalOverride ? null : { total: exam.total, attended: exam.attended }); goTo("monthlyGoalExamDetail"); }}
               onViewAttendance={() => { setMemberAttendanceSubgroupLetter(todayGoalOverride ? null : selectedSubgroup.letter); setMemberAttendanceTargetPct(todayGoalOverride ? null : selectedSubgroup.monthlyGoalPct); goTo("memberAttendance"); }}
             />
           </motion.div>
@@ -7120,6 +7150,7 @@ function PrototypeApp() {
               group={selectedGroup}
               sg={selectedSubgroup}
               override={todayGoalOverride ?? undefined}
+              examTotals={selectedExamTotals ?? undefined}
               onBack={goBack}
             />
           </motion.div>
