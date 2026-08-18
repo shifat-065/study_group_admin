@@ -1783,7 +1783,7 @@ function GroupSettingsSheet({
   );
 }
 
-function GroupMemberScreen({ group, onBack, onActivityLog, onRank, onMembers, onSubgroups, onTodayGoal, onMonthlyGoal, onDiscussion, onFacebookGroup, onSelectExam, onSelectQuickLink, isAdmin, onAdminPanel, onEditAnnouncement, onDeleteAnnouncement, onViewGroupRules, announcement }: { group: Group; onBack: () => void; onActivityLog: () => void; onRank: () => void; onMembers: () => void; onSubgroups: () => void; onTodayGoal: () => void; onMonthlyGoal: () => void; onDiscussion: () => void; onFacebookGroup: () => void; onSelectExam: (examName: string, isLive: boolean) => void; onSelectQuickLink: (link: QuickLink) => void; isAdmin?: boolean; onAdminPanel?: () => void; onEditAnnouncement?: () => void; onDeleteAnnouncement?: () => void; onViewGroupRules?: () => void; announcement: { title: string; body: string; date: string } }) {
+function GroupMemberScreen({ group, onBack, onActivityLog, onRank, onMembers, onSubgroups, onTodayGoal, onMonthlyGoal, onDiscussion, onFacebookGroup, onSelectExam, onSelectQuickLink, isAdmin, onAdminPanel, onEditAnnouncement, onDeleteAnnouncement, onViewGroupRules, announcement, todayGoal, monthlyGoal }: { group: Group; onBack: () => void; onActivityLog: () => void; onRank: () => void; onMembers: () => void; onSubgroups: () => void; onTodayGoal: () => void; onMonthlyGoal: () => void; onDiscussion: () => void; onFacebookGroup: () => void; onSelectExam: (examName: string, isLive: boolean) => void; onSelectQuickLink: (link: QuickLink) => void; isAdmin?: boolean; onAdminPanel?: () => void; onEditAnnouncement?: () => void; onDeleteAnnouncement?: () => void; onViewGroupRules?: () => void; announcement: { title: string; body: string; date: string }; todayGoal: GoalDetailOverride; monthlyGoal: GoalDetailOverride }) {
   const [showSettings, setShowSettings] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [showReport, setShowReport] = useState(false);
@@ -2009,12 +2009,12 @@ function GroupMemberScreen({ group, onBack, onActivityLog, onRank, onMembers, on
                 <ChevronDown className="size-5 text-[#787878] -rotate-90" strokeWidth={2} />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="font-['Noto_Sans',sans-serif] font-medium text-[12px] text-black leading-[16px]">188 / 438</span>
-                <GoalProgressBar value={188} total={438} />
+                <span className="font-['Noto_Sans',sans-serif] font-medium text-[12px] text-black leading-[16px]">{todayGoal.attended} / {todayGoal.bigCount}</span>
+                <GoalProgressBar value={todayGoal.attended} total={todayGoal.bigCount} />
               </div>
               <div className="flex items-center justify-between">
                 <span className="font-['Noto_Sans',sans-serif] font-normal text-[12px] text-[#484848] leading-[16px]">Today's Attendance</span>
-                <span className="font-['Noto_Sans',sans-serif] font-normal text-[12px] text-black leading-[16px]">50%</span>
+                <span className="font-['Noto_Sans',sans-serif] font-normal text-[12px] text-black leading-[16px]">{todayGoal.goalPct.toFixed(0)}%</span>
               </div>
             </button>
             {/* Monthly Goal */}
@@ -2027,12 +2027,12 @@ function GroupMemberScreen({ group, onBack, onActivityLog, onRank, onMembers, on
                 <ChevronDown className="size-5 text-[#787878] -rotate-90" strokeWidth={2} />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="font-['Noto_Sans',sans-serif] font-medium text-[12px] text-black leading-[16px]">188 / 438</span>
-                <GoalProgressBar value={188} total={438} />
+                <span className="font-['Noto_Sans',sans-serif] font-medium text-[12px] text-black leading-[16px]">{monthlyGoal.attended} / {monthlyGoal.bigCount}</span>
+                <GoalProgressBar value={monthlyGoal.attended} total={monthlyGoal.bigCount} />
               </div>
               <div className="flex items-center justify-between">
                 <span className="font-['Noto_Sans',sans-serif] font-normal text-[12px] text-[#484848] leading-[16px]">Monthly Attendance</span>
-                <span className="font-['Noto_Sans',sans-serif] font-normal text-[12px] text-black leading-[16px]">50%</span>
+                <span className="font-['Noto_Sans',sans-serif] font-normal text-[12px] text-black leading-[16px]">{monthlyGoal.goalPct.toFixed(0)}%</span>
               </div>
             </button>
           </div>
@@ -4985,9 +4985,23 @@ const MONTHLY_EXAM_LIST: ExamListItem[] = [
 
 type GoalMode = "today" | "monthly";
 
-// The admin's own group-level "Today's goal" / "Monthly goal" card — both use the same
-// fixed numbers in Figma, which don't derive from any single subgroup's member count/goalPct.
-const ADMIN_GOAL_OVERRIDE = { goalPct: 60.0, bigCount: 303, attended: 150, remaining: 53, barPct: 78.82 };
+// The admin's own group-level "Today's goal" / "Monthly goal" card is the real sum across
+// every subgroup: total = each subgroup's own member×exam-count total added up, attended =
+// each subgroup's own attended (from its goalPct) added up, and the percentage is derived
+// from that sum — never set independently.
+function computeGroupGoalAggregate(subgroups: SubgroupData[], mode: GoalMode): GoalDetailOverride {
+  const perMember = mode === "today" ? EXAM_LIST.length : 5 * 30;
+  let bigCount = 0, attended = 0;
+  for (const sg of subgroups) {
+    const total = sg.members * perMember;
+    const pct = mode === "today" ? sg.goalPct : sg.monthlyGoalPct;
+    bigCount += total;
+    attended += Math.round(total * pct / 100);
+  }
+  const remaining = Math.max(bigCount - attended, 0);
+  const goalPct = bigCount > 0 ? (attended / bigCount) * 100 : 0;
+  return { goalPct, bigCount, attended, remaining, barPct: goalPct };
+}
 
 // ── Screen: Today's Goal / Monthly Goal ───────────────────────────────────────
 
@@ -5003,19 +5017,17 @@ function GoalDetailScreen({ mode, sg, onBack, onSelectExam, onViewAttendance, ov
   const title = mode === "today" ? "Today's goal" : "Monthly goal";
   const examList = mode === "today" ? EXAM_LIST : MONTHLY_EXAM_LIST;
 
-  // The admin's own group-level entry (override set) keeps its fixed Figma numbers — not
-  // derived from any subgroup's math. Reached from a specific subgroup instead, sg.goalPct
-  // is the authoritative percentage for that subgroup, and every other number here (the
-  // exam-list total, attended, remaining, and each individual exam row) is derived from
-  // it, so nothing on this screen can drift out of sync with sg.goalPct.
-  let examRows: Array<ExamListItem & { total: number; attended: number }>;
+  // The admin's own group-level entry (override set) carries the real sum-of-all-subgroups
+  // totals/attended (computed by the caller). Reached from a specific subgroup instead,
+  // sg.goalPct is the authoritative percentage for that subgroup. Either way, every number
+  // on this screen (exam-list total, attended, remaining, and each individual exam row) is
+  // derived from the same bigCount/attended/goalPct so nothing can drift out of sync.
   let bigCount: number, attended: number, remaining: number, goalPct: number;
   if (override) {
     bigCount = override.bigCount;
     attended = override.attended;
     remaining = override.remaining;
     goalPct = override.goalPct;
-    examRows = examList.map(exam => ({ ...exam }));
   } else {
     const memberCount = sg.members;
     // Today's total is a single day's worth of exams (member count × today's exam count).
@@ -5026,40 +5038,39 @@ function GoalDetailScreen({ mode, sg, onBack, onSelectExam, onViewAttendance, ov
     goalPct = mode === "today" ? sg.goalPct : sg.monthlyGoalPct;
     attended = Math.round(bigCount * goalPct / 100);
     remaining = Math.max(bigCount - attended, 0);
-
-    // Split bigCount unevenly across the exam rows (weighted, largest-remainder rounding so
-    // it still sums back to bigCount exactly) — real exams don't all draw the same number of
-    // attempts, so each row gets a distinct-looking share instead of ~n identical numbers.
-    // Attended is split the same way across those per-row totals, so both the row totals and
-    // the row attended counts always sum to the numbers shown in the summary card above.
-    const n = examList.length;
-    const weights = Array.from({ length: n }, (_, i) => 0.65 + ((i * 53 + 17) % 71) / 100);
-    const weightSum = weights.reduce((a, b) => a + b, 0);
-    const distribute = (n_: number, weightSum_: number, count: number) => {
-      const raw = weights.map(w => (count * w) / weightSum_);
-      const floors = raw.map(Math.floor);
-      const used = floors.reduce((a, b) => a + b, 0);
-      const remainder = count - used;
-      const order = raw.map((v, i) => ({ i, frac: v - floors[i] })).sort((a, b) => b.frac - a.frac);
-      const result = [...floors];
-      for (let k = 0; k < remainder; k++) result[order[k].i] += 1;
-      return result;
-    };
-    const rowTotals = distribute(n, weightSum, bigCount);
-    const rowAttendedRaw = rowTotals.map((t, i) => Math.min(t, Math.round(t * goalPct / 100)));
-    const rowAttendedSum = rowAttendedRaw.reduce((a, b) => a + b, 0);
-    let attendedDiff = attended - rowAttendedSum;
-    const rowAttended = [...rowAttendedRaw];
-    // Nudge the rounded per-row attended counts so they sum exactly to `attended`, without
-    // pushing any row below 0 or above its own total.
-    for (let i = 0; attendedDiff !== 0 && i < n * 4; i++) {
-      const idx = i % n;
-      if (attendedDiff > 0 && rowAttended[idx] < rowTotals[idx]) { rowAttended[idx]++; attendedDiff--; }
-      else if (attendedDiff < 0 && rowAttended[idx] > 0) { rowAttended[idx]--; attendedDiff++; }
-    }
-
-    examRows = examList.map((exam, i) => ({ ...exam, total: rowTotals[i], attended: rowAttended[i] }));
   }
+
+  // Split bigCount unevenly across the exam rows (weighted, largest-remainder rounding so
+  // it still sums back to bigCount exactly) — real exams don't all draw the same number of
+  // attempts, so each row gets a distinct-looking share instead of ~n identical numbers.
+  // Attended is split the same way across those per-row totals, so both the row totals and
+  // the row attended counts always sum to the numbers shown in the summary card above.
+  const n = examList.length;
+  const weights = Array.from({ length: n }, (_, i) => 0.65 + ((i * 53 + 17) % 71) / 100);
+  const weightSum = weights.reduce((a, b) => a + b, 0);
+  const distribute = (count: number) => {
+    const raw = weights.map(w => (count * w) / weightSum);
+    const floors = raw.map(Math.floor);
+    const used = floors.reduce((a, b) => a + b, 0);
+    const remainder = count - used;
+    const order = raw.map((v, i) => ({ i, frac: v - floors[i] })).sort((a, b) => b.frac - a.frac);
+    const result = [...floors];
+    for (let k = 0; k < remainder; k++) result[order[k].i] += 1;
+    return result;
+  };
+  const rowTotals = distribute(bigCount);
+  const rowAttendedRaw = rowTotals.map((t, i) => Math.min(t, Math.round(t * goalPct / 100)));
+  const rowAttendedSum = rowAttendedRaw.reduce((a, b) => a + b, 0);
+  let attendedDiff = attended - rowAttendedSum;
+  const rowAttended = [...rowAttendedRaw];
+  // Nudge the rounded per-row attended counts so they sum exactly to `attended`, without
+  // pushing any row below 0 or above its own total.
+  for (let i = 0; attendedDiff !== 0 && i < n * 4; i++) {
+    const idx = i % n;
+    if (attendedDiff > 0 && rowAttended[idx] < rowTotals[idx]) { rowAttended[idx]++; attendedDiff--; }
+    else if (attendedDiff < 0 && rowAttended[idx] > 0) { rowAttended[idx]--; attendedDiff++; }
+  }
+  const examRows = examList.map((exam, i) => ({ ...exam, total: rowTotals[i], attended: rowAttended[i] }));
   const barPct = goalPct;
 
   const chipColor = pctChipStyle(goalPct);
@@ -6667,12 +6678,14 @@ function PrototypeApp() {
               onRank={() => goTo("rank")}
               onMembers={() => { setMembersAdminMode(true); goTo("members"); }}
               onSubgroups={() => { setSubgroupsAdminMode(true); goTo("subgroups"); }}
-              onTodayGoal={() => { setSelectedSubgroup(subgroups.find(s => s.isMyGroup) ?? subgroups[0]); setTodayGoalOverride(ADMIN_GOAL_OVERRIDE); goTo("todayGoal"); }}
-              onMonthlyGoal={() => { setSelectedSubgroup(subgroups.find(s => s.isMyGroup) ?? subgroups[0]); setTodayGoalOverride(ADMIN_GOAL_OVERRIDE); goTo("monthlyGoal"); }}
+              onTodayGoal={() => { setSelectedSubgroup(subgroups.find(s => s.isMyGroup) ?? subgroups[0]); setTodayGoalOverride(computeGroupGoalAggregate(subgroups, "today")); goTo("todayGoal"); }}
+              onMonthlyGoal={() => { setSelectedSubgroup(subgroups.find(s => s.isMyGroup) ?? subgroups[0]); setTodayGoalOverride(computeGroupGoalAggregate(subgroups, "monthly")); goTo("monthlyGoal"); }}
               onDiscussion={() => goTo("discussion")}
               onFacebookGroup={() => goTo("facebookGroup")}
               onSelectExam={(examName, isLive) => { setSelectedExamName(examName); setSelectedExamLive(isLive); setSelectedExamList(MANDATORY_EXAMS); goTo("examPage"); }}
               onSelectQuickLink={(link) => { setSelectedQuickLink(link); goTo("quickLinkPage"); }}
+              todayGoal={computeGroupGoalAggregate(subgroups, "today")}
+              monthlyGoal={computeGroupGoalAggregate(subgroups, "monthly")}
             />
           </motion.div>
         )}
