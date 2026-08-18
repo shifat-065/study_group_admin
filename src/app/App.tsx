@@ -5670,6 +5670,7 @@ function SubgroupListScreen({ onBack, group, subgroups, onDetail, onCreateNew }:
   });
 
   function SubgroupCard({ sg }: { sg: typeof SUBGROUPS[0] }) {
+    const todayAttended = Math.round(EXAM_LIST.length * sg.members * sg.goalPct / 100);
     return (
       <div className="bg-[#f4f6fa] rounded-[12px] w-full p-[12px] flex flex-col gap-4 active:opacity-70 transition-opacity cursor-pointer" onClick={() => onDetail(sg)}>
         {/* Profile row */}
@@ -5701,7 +5702,7 @@ function SubgroupListScreen({ onBack, group, subgroups, onDetail, onCreateNew }:
               className="font-['Noto_Sans',sans-serif] font-normal text-[12px] text-[#484848] leading-[16px]"
               style={ns}
             >
-              {sg.members} members • {sg.attended} attended
+              {sg.members} members • {todayAttended} attended
             </span>
           </div>
         </div>
