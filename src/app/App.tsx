@@ -5110,11 +5110,19 @@ function GoalDetailScreen({ mode, sg, onBack, onSelectExam, onViewAttendance, ov
 
             {/* Exam rows */}
             <div className="flex flex-col gap-1">
-              {EXAM_LIST.map((exam) => (
+              {EXAM_LIST.map((exam) => {
+                // Group-level entry (override set) keeps the exam's authored group-wide
+                // total; a specific subgroup's Today's Goal scales down to that subgroup's
+                // own member count instead of the whole group's 64.
+                const total = override ? exam.total : sg.members;
+                const attended = override
+                  ? exam.attended
+                  : Math.min(sg.members, Math.round((exam.attended / MEMBER_LIST.length) * sg.members));
+                return (
                 <button
                   key={exam.name}
                   onClick={() => onSelectExam(exam)}
-                  className="h-12 w-full bg-[#f4f6fa] rounded-[8px] flex items-center px-4 active:opacity-70 transition-opacity"
+                  className="h-12 w-full bg-[#f4f6fa] rounded-[8px] flex items-center justify-between px-4 active:opacity-70 transition-opacity"
                 >
                   <span
                     className="flex-1 font-['Noto_Sans',sans-serif] font-medium text-[14px] text-black leading-[20px] truncate text-left"
@@ -5122,8 +5130,23 @@ function GoalDetailScreen({ mode, sg, onBack, onSelectExam, onViewAttendance, ov
                   >
                     {exam.name}
                   </span>
+                  <div className="flex items-center gap-1 shrink-0 ml-2">
+                    <span className="font-['Noto_Sans',sans-serif] font-medium text-[14px] leading-[20px]" style={ns}>
+                      <span className="text-black">{attended}/</span>
+                      <span className="text-[#484848]">{total}</span>
+                    </span>
+                    <svg className="size-6" fill="none" viewBox="0 0 24 24">
+                      <mask id={`m-ar-${exam.name}`} maskUnits="userSpaceOnUse" style={{ maskType: "alpha" }} width="24" height="24">
+                        <rect fill="#D9D9D9" width="24" height="24" />
+                      </mask>
+                      <g mask={`url(#m-ar-${exam.name})`}>
+                        <path d={goalSvgPaths.p3ecf1680} fill="black" />
+                      </g>
+                    </svg>
+                  </div>
                 </button>
-              ))}
+                );
+              })}
             </div>
           </div>
 
