@@ -4779,7 +4779,7 @@ function SortBottomSheet({ value, onSelect, onClose, options = SORT_OPTIONS }: {
   );
 }
 
-function GroupMembersScreen({ onBack, group, zone, isAdmin, title, hideCountRow, subgroupLetter }: { onBack: () => void; group: Group; zone?: Zone; isAdmin?: boolean; title?: string; hideCountRow?: boolean; subgroupLetter?: string }) {
+function GroupMembersScreen({ onBack, group, zone, isAdmin, title, hideCountRow, subgroupLetter, targetPct }: { onBack: () => void; group: Group; zone?: Zone; isAdmin?: boolean; title?: string; hideCountRow?: boolean; subgroupLetter?: string; targetPct?: number }) {
   const ns = { fontVariationSettings: '"CTGR" 0, "wdth" 100' };
   const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState("");
@@ -4791,8 +4791,21 @@ function GroupMembersScreen({ onBack, group, zone, isAdmin, title, hideCountRow,
   const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
 
   const zoneConfig = zone ? ZONES[zone] : null;
-  const remaining = MEMBER_LIST.filter(m => !removedIds.has(m.memberId))
+  const scoped = MEMBER_LIST.filter(m => !removedIds.has(m.memberId))
     .filter(m => !subgroupLetter || m.subgroup === subgroupLetter);
+  // When reached from a subgroup's Today's/Monthly Goal, each member's shown attendance
+  // is scaled so the scoped group's average matches that goal's own percentage (e.g.
+  // Monthly Goal at 33% shows member rows averaging 33%, not the members' raw overall pct).
+  const remaining = (() => {
+    if (targetPct == null || scoped.length === 0) return scoped;
+    const currentAvg = scoped.reduce((s, m) => s + m.pct, 0) / scoped.length;
+    if (currentAvg === 0) return scoped;
+    const scale = targetPct / currentAvg;
+    return scoped.map(m => {
+      const pct = Math.min(100, Math.max(0, Math.round(m.pct * scale * 10) / 10));
+      return { ...m, pct, chip: pctToChip(pct) };
+    });
+  })();
   const base = zoneConfig ? remaining.filter(m => zoneConfig.match(m.pct)) : remaining;
   const filtered = (query.trim() ? base.filter(m => m.name.toLowerCase().includes(query.trim().toLowerCase())) : base)
     .slice()
@@ -6515,6 +6528,7 @@ function PrototypeApp() {
   const [selectedExamAttended, setSelectedExamAttended] = useState(0);
   const [selectedExamSubgroupLetter, setSelectedExamSubgroupLetter] = useState<string | null>(null);
   const [memberAttendanceSubgroupLetter, setMemberAttendanceSubgroupLetter] = useState<string | null>(null);
+  const [memberAttendanceTargetPct, setMemberAttendanceTargetPct] = useState<number | null>(null);
   const [attendanceScreenTitle, setAttendanceScreenTitle] = useState("Exam Attendance");
   const [announcement, setAnnouncement] = useState({
     title: "New Announcements",
@@ -6739,7 +6753,7 @@ function PrototypeApp() {
             transition={slideTrans}
             className="absolute inset-0"
           >
-            <GroupMembersScreen group={selectedGroup} isAdmin title="Member attendance" hideCountRow subgroupLetter={memberAttendanceSubgroupLetter ?? undefined} onBack={goBack} />
+            <GroupMembersScreen group={selectedGroup} isAdmin title="Member attendance" hideCountRow subgroupLetter={memberAttendanceSubgroupLetter ?? undefined} targetPct={memberAttendanceTargetPct ?? undefined} onBack={goBack} />
           </motion.div>
         )}
 
@@ -7063,7 +7077,7 @@ function PrototypeApp() {
                 setAttendanceScreenTitle("Exam Attendance");
                 goTo("examAttendanceMembers");
               }}
-              onViewAttendance={() => { setMemberAttendanceSubgroupLetter(todayGoalOverride ? null : selectedSubgroup.letter); goTo("memberAttendance"); }}
+              onViewAttendance={() => { setMemberAttendanceSubgroupLetter(todayGoalOverride ? null : selectedSubgroup.letter); setMemberAttendanceTargetPct(todayGoalOverride ? null : selectedSubgroup.goalPct); goTo("memberAttendance"); }}
             />
           </motion.div>
         )}
@@ -7085,7 +7099,7 @@ function PrototypeApp() {
               override={todayGoalOverride ?? undefined}
               onBack={goBack}
               onSelectExam={(exam) => { setSelectedExamName(exam.name); goTo("monthlyGoalExamDetail"); }}
-              onViewAttendance={() => { setMemberAttendanceSubgroupLetter(todayGoalOverride ? null : selectedSubgroup.letter); goTo("memberAttendance"); }}
+              onViewAttendance={() => { setMemberAttendanceSubgroupLetter(todayGoalOverride ? null : selectedSubgroup.letter); setMemberAttendanceTargetPct(todayGoalOverride ? null : selectedSubgroup.monthlyGoalPct); goTo("memberAttendance"); }}
             />
           </motion.div>
         )}
