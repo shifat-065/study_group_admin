@@ -4976,14 +4976,26 @@ function GoalDetailScreen({ mode, sg, onBack, onSelectExam, onViewAttendance, ov
   const ns = { fontVariationSettings: '"CTGR" 0, "wdth" 100' };
   const [showExamsInfo, setShowExamsInfo] = useState(false);
 
-  const isToday = mode === "today";
-  const title = isToday ? "Today's goal" : "Monthly goal";
-  const attended = override ? override.attended : isToday ? Math.round(sg.members * sg.goalPct / 100) : sg.attended;
-  const total = isToday ? sg.members : sg.members * 4;
-  const remaining = override ? override.remaining : Math.max(total - attended, 0);
-  const bigCount = override ? override.bigCount : attended + remaining;
-  const barPct = override ? override.barPct : total > 0 ? (attended / total) * 100 : 0;
-  const goalPct = override ? override.goalPct : sg.goalPct;
+  const title = mode === "today" ? "Today's goal" : "Monthly goal";
+
+  // Every number here is derived bottom-up from the exam list: each exam's total is the
+  // current member count (the whole group, or a subgroup's own count when sg is scoped
+  // to one), each exam's attended is its own attendance count (scaled down proportionally
+  // for a subgroup), and the summary card is simply the sum of those per-exam numbers —
+  // so the top card can never drift out of sync with the rows below it.
+  const memberCount = override ? MEMBER_LIST.length : sg.members;
+  const examRows = EXAM_LIST.map(exam => ({
+    ...exam,
+    total: memberCount,
+    attended: override
+      ? exam.attended
+      : Math.min(memberCount, Math.round((exam.attended / MEMBER_LIST.length) * memberCount)),
+  }));
+  const bigCount = examRows.reduce((sum, e) => sum + e.total, 0);
+  const attended = examRows.reduce((sum, e) => sum + e.attended, 0);
+  const remaining = Math.max(bigCount - attended, 0);
+  const barPct = bigCount > 0 ? (attended / bigCount) * 100 : 0;
+  const goalPct = barPct;
 
   const chipColor = pctChipStyle(goalPct);
 
@@ -5107,14 +5119,7 @@ function GoalDetailScreen({ mode, sg, onBack, onSelectExam, onViewAttendance, ov
 
             {/* Exam rows */}
             <div className="flex flex-col gap-1">
-              {EXAM_LIST.map((exam) => {
-                // Group-level entry (override set) keeps the exam's authored group-wide
-                // total; a specific subgroup's Today's Goal scales down to that subgroup's
-                // own member count instead of the whole group's 64.
-                const total = override ? exam.total : sg.members;
-                const attended = override
-                  ? exam.attended
-                  : Math.min(sg.members, Math.round((exam.attended / MEMBER_LIST.length) * sg.members));
+              {examRows.map((exam) => {
                 return (
                 <button
                   key={exam.name}
@@ -5129,8 +5134,8 @@ function GoalDetailScreen({ mode, sg, onBack, onSelectExam, onViewAttendance, ov
                   </span>
                   <div className="flex items-center gap-1 shrink-0 ml-2">
                     <span className="font-['Noto_Sans',sans-serif] font-medium text-[14px] leading-[20px]" style={ns}>
-                      <span className="text-black">{attended}/</span>
-                      <span className="text-[#484848]">{total}</span>
+                      <span className="text-black">{exam.attended}/</span>
+                      <span className="text-[#484848]">{exam.total}</span>
                     </span>
                     <svg className="size-6" fill="none" viewBox="0 0 24 24">
                       <mask id={`m-ar-${exam.name}`} maskUnits="userSpaceOnUse" style={{ maskType: "alpha" }} width="24" height="24">
@@ -7008,14 +7013,11 @@ function PrototypeApp() {
               override={todayGoalOverride ?? undefined}
               onBack={goBack}
               onSelectExam={(exam) => {
+                // exam.attended is already scaled to the current context (whole group or
+                // this subgroup) by GoalDetailScreen, so it can be used as-is here.
                 setSelectedExamName(exam.name);
-                if (todayGoalOverride) {
-                  setSelectedExamAttended(exam.attended);
-                  setSelectedExamSubgroupLetter(null);
-                } else {
-                  setSelectedExamAttended(Math.min(selectedSubgroup.members, Math.round((exam.attended / MEMBER_LIST.length) * selectedSubgroup.members)));
-                  setSelectedExamSubgroupLetter(selectedSubgroup.letter);
-                }
+                setSelectedExamAttended(exam.attended);
+                setSelectedExamSubgroupLetter(todayGoalOverride ? null : selectedSubgroup.letter);
                 setAttendanceScreenTitle("Exam Attendance");
                 goTo("examAttendanceMembers");
               }}
