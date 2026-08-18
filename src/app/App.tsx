@@ -1074,7 +1074,7 @@ function TimerIcon() {
   );
 }
 
-function ActivityCard({ exam }: { exam?: typeof MEMBER_EXAMS[0] }) {
+function ActivityCard({ exam, onSelectQuickLink }: { exam?: typeof MEMBER_EXAMS[0]; onSelectQuickLink?: (link: QuickLink) => void }) {
   if (!exam) return null;
   return (
     <div className="bg-[#f4f6fa] rounded-[16px] w-full px-4 pt-4 pb-3 flex flex-col gap-[18px]">
@@ -1110,7 +1110,10 @@ function ActivityCard({ exam }: { exam?: typeof MEMBER_EXAMS[0] }) {
       </p>
       {/* Footer */}
       <div className="flex items-center justify-between">
-        <div className="bg-[#ffdbca] flex items-center gap-2 p-1 pr-2 rounded-[16px]">
+        <button
+          onClick={() => onSelectQuickLink?.({ id: "studyMaterials", label: "Study materials", Icon: FileText })}
+          className="bg-[#ffdbca] flex items-center gap-2 p-1 pr-2 rounded-[16px] active:opacity-70 transition-opacity"
+        >
           <svg className="size-6 shrink-0" fill="none" viewBox="0 0 24 24">
             <mask id="m-design" maskUnits="userSpaceOnUse" style={{ maskType: "alpha" }} width="24" height="24">
               <rect fill="#D9D9D9" width="24" height="24" />
@@ -1128,7 +1131,7 @@ function ActivityCard({ exam }: { exam?: typeof MEMBER_EXAMS[0] }) {
               <path d={svgMember.p20ba9eb0} fill="black" />
             </g>
           </svg>
-        </div>
+        </button>
         <svg className="size-5 shrink-0" fill="none" viewBox="0 0 20 20">
           <mask id="m-pdf" maskUnits="userSpaceOnUse" style={{ maskType: "alpha" }} width="20" height="20">
             <rect fill="#D9D9D9" width="20" height="20" />
@@ -1140,7 +1143,10 @@ function ActivityCard({ exam }: { exam?: typeof MEMBER_EXAMS[0] }) {
       </div>
       {/* Action buttons */}
       <div className="flex gap-2">
-        <button className="flex-1 h-12 rounded-[8px] border border-[#c7c7c7] flex items-center justify-center">
+        <button
+          onClick={() => onSelectQuickLink?.({ id: "practiceQuiz", label: "প্র্যাকটিস কুইজ", Icon: ClipboardCheck })}
+          className="flex-1 h-12 rounded-[8px] border border-[#c7c7c7] flex items-center justify-center active:bg-gray-50 transition-colors"
+        >
           <span className="font-['Noto_Sans',sans-serif] font-medium text-[14px] text-[#484848] leading-[20px]" style={{ fontVariationSettings: '"CTGR" 0, "wdth" 100' }}>প্র্যাকটিস কুইজ</span>
         </button>
         {exam.isLive && (
@@ -2048,7 +2054,7 @@ function GroupMemberScreen({ group, onBack, onActivityLog, onRank, onMembers, on
             </div>
           </div>
           <div className="flex flex-col gap-3">
-            {MEMBER_EXAMS.map((exam, i) => <ActivityCard key={i} exam={exam} />)}
+            {MEMBER_EXAMS.map((exam, i) => <ActivityCard key={i} exam={exam} onSelectQuickLink={onSelectQuickLink} />)}
           </div>
         </div>
 
@@ -3375,7 +3381,7 @@ function ExamPageScreen({
                   Next exam
                 </span>
               )}
-              <ActivityCard exam={cardExam} />
+              <ActivityCard exam={cardExam} onSelectQuickLink={onSelectQuickLink} />
             </div>
           )}
           <ExamQuickLinks onSelect={onSelectQuickLink} />
