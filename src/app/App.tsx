@@ -6353,6 +6353,13 @@ function MonthlyGoalExamDetailScreen({ examName, group, sg, override, examTotals
   const monthRemaining = Math.max(monthTotal - monthAttended, 0);
   const monthBarPct = goalPct;
 
+  // A weekly exam (নাম-এ "সাপ্তাহিক") only runs on ~4-5 days across the month, so its chart
+  // should only light up those days instead of all 31 — the rest stay flat at 0.
+  const isWeekly = examName.includes("সাপ্তাহিক");
+  const chartPcts = isWeekly
+    ? DAILY_GOAL_PCTS.map((pct, i) => (i % 7 === 6 ? pct : 0))
+    : DAILY_GOAL_PCTS;
+
   const scopedMembers = MEMBER_LIST.filter(m => !removedIds.has(m.memberId) && (override || m.subgroup === sg.letter));
   // Scale each member's shown attendance so the scoped group's average matches this exam's
   // own percentage, instead of the members' unrelated raw overall pct.
@@ -6466,17 +6473,17 @@ function MonthlyGoalExamDetailScreen({ examName, group, sg, override, examTotals
                   <span className="font-['Noto_Sans',sans-serif] font-medium text-[14px] text-black leading-5" style={ns}>Monthly goal</span>
                   <span className="font-['Noto_Sans',sans-serif] font-medium text-[14px] text-black leading-5" style={ns}>5.6 K</span>
                 </div>
-                <div className="grid gap-x-1 h-[100px] items-end" style={{ gridTemplateColumns: `repeat(${DAILY_GOAL_PCTS.length}, minmax(0, 1fr))` }}>
-                  {DAILY_GOAL_PCTS.map((pct, i) => (
-                    <div key={i} className="rounded-t-sm" style={{ height: `${pct}px`, backgroundColor: zoneBarColor(pct) }} />
+                <div className="grid gap-x-1 h-[100px] items-end" style={{ gridTemplateColumns: `repeat(${chartPcts.length}, minmax(0, 1fr))` }}>
+                  {chartPcts.map((pct, i) => (
+                    <div key={i} className="rounded-t-sm" style={{ height: `${pct}px`, backgroundColor: pct > 0 ? zoneBarColor(pct) : "#e3e3e3" }} />
                   ))}
                 </div>
                 <div className="flex items-center justify-between">
-                  {[1, 10, 20, DAILY_GOAL_PCTS.length].map(day => (
+                  {[1, 10, 20, chartPcts.length].map(day => (
                     <span key={day} className="font-['Noto_Sans',sans-serif] font-medium text-[10px] text-[#8f8d8d] leading-4" style={ns}>{day}</span>
                   ))}
                 </div>
-                <span className="text-center font-['Noto_Sans',sans-serif] font-medium text-[12px] text-black leading-4" style={ns}>75.5% achievement ratio</span>
+                <span className="text-center font-['Noto_Sans',sans-serif] font-medium text-[12px] text-black leading-4" style={ns}>{goalPct.toFixed(1)}% achievement ratio</span>
               </div>
 
               {/* Member attendance header */}
