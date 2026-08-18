@@ -6347,11 +6347,11 @@ function MonthlyGoalExamDetailScreen({ examName, group, sg, override, examTotals
   // Group-level entry (override set) shows the whole group. Reached by tapping a specific
   // exam row from a subgroup's Monthly Goal, examTotals carries that row's own total/attended
   // (matching the number the user just tapped) instead of a separately recomputed figure.
-  const monthTotal = override ? override.bigCount : examTotals ? examTotals.total : sg.members * 4;
-  const monthAttended = override ? override.attended : examTotals ? examTotals.attended : Math.round(monthTotal * sg.monthlyGoalPct / 100);
-  const goalPct = override ? override.goalPct : monthTotal > 0 ? (monthAttended / monthTotal) * 100 : 0;
-  const monthRemaining = override ? override.remaining : Math.max(monthTotal - monthAttended, 0);
-  const monthBarPct = override ? override.barPct : goalPct;
+  const monthTotal = examTotals ? examTotals.total : override ? override.bigCount : sg.members * 4;
+  const monthAttended = examTotals ? examTotals.attended : override ? override.attended : Math.round(monthTotal * sg.monthlyGoalPct / 100);
+  const goalPct = monthTotal > 0 ? (monthAttended / monthTotal) * 100 : 0;
+  const monthRemaining = Math.max(monthTotal - monthAttended, 0);
+  const monthBarPct = goalPct;
 
   const scopedMembers = MEMBER_LIST.filter(m => !removedIds.has(m.memberId) && (override || m.subgroup === sg.letter));
   // Scale each member's shown attendance so the scoped group's average matches this exam's
@@ -7135,7 +7135,7 @@ function PrototypeApp() {
               sg={selectedSubgroup}
               override={todayGoalOverride ?? undefined}
               onBack={goBack}
-              onSelectExam={(exam) => { setSelectedExamName(exam.name); setSelectedExamTotals(todayGoalOverride ? null : { total: exam.total, attended: exam.attended }); goTo("monthlyGoalExamDetail"); }}
+              onSelectExam={(exam) => { setSelectedExamName(exam.name); setSelectedExamTotals({ total: exam.total, attended: exam.attended }); goTo("monthlyGoalExamDetail"); }}
               onViewAttendance={() => { setMemberAttendanceSubgroupLetter(todayGoalOverride ? null : selectedSubgroup.letter); setMemberAttendanceTargetPct(todayGoalOverride ? null : selectedSubgroup.monthlyGoalPct); goTo("memberAttendance"); }}
             />
           </motion.div>
