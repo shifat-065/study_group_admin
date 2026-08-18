@@ -6371,6 +6371,10 @@ function MonthlyGoalExamDetailScreen({ examName, group, sg, override, examTotals
   const monthBarPct = goalPct;
 
   const chartPcts = examChartPcts(examName);
+  // Achievement ratio is the average of this exam's own active-day chart bars, not the
+  // Live Exams card's percentage — the two are independent numbers on this screen.
+  const activeChartPcts = chartPcts.filter(pct => pct > 0);
+  const chartAchievementRatio = activeChartPcts.length > 0 ? activeChartPcts.reduce((a, b) => a + b, 0) / activeChartPcts.length : 0;
 
   const scopedMembers = MEMBER_LIST.filter(m => !removedIds.has(m.memberId) && (override || m.subgroup === sg.letter));
   // Scale each member's shown attendance so the scoped group's average matches this exam's
@@ -6499,7 +6503,7 @@ function MonthlyGoalExamDetailScreen({ examName, group, sg, override, examTotals
                     <span key={day} className="font-['Noto_Sans',sans-serif] font-medium text-[10px] text-[#8f8d8d] leading-4" style={ns}>{day}</span>
                   ))}
                 </div>
-                <span className="text-center font-['Noto_Sans',sans-serif] font-medium text-[12px] text-black leading-4" style={ns}>{goalPct.toFixed(1)}% achievement ratio</span>
+                <span className="text-center font-['Noto_Sans',sans-serif] font-medium text-[12px] text-black leading-4" style={ns}>{chartAchievementRatio.toFixed(1)}% achievement ratio</span>
               </div>
 
               {/* Member attendance header */}
