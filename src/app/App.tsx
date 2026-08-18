@@ -5008,20 +5008,27 @@ function GoalDetailScreen({ mode, sg, onBack, onSelectExam, onViewAttendance, ov
     // Today's total is a single day's worth of exams (member count × today's exam count).
     // Monthly's total is a genuine month-scale aggregate — roughly 30 days at a typical
     // daily rate of ~5 exams per member — so it's always meaningfully larger than any one
-    // day's total (e.g. 10 members × 5 × 30 = 1500, well above a ~40-60 daily range),
-    // rather than just the count of exam-type rows shown below.
+    // day's total (e.g. 10 members × 5 × 30 = 1500, well above a ~40-60 daily range).
     bigCount = mode === "today" ? memberCount * examList.length : memberCount * 5 * 30;
     attended = Math.round(bigCount * sg.goalPct / 100);
     remaining = Math.max(bigCount - attended, 0);
     goalPct = sg.goalPct;
-    // Exam rows always reflect this subgroup's own member count per exam type, independent
-    // of the (possibly month-scaled) aggregate above.
-    let toDistribute = Math.round(memberCount * examList.length * sg.goalPct / 100);
+
+    // Split bigCount evenly across the exam rows (largest-remainder, so it sums back to
+    // bigCount exactly), then split attended the same way across those per-row totals —
+    // so both the row totals and the row attended counts always sum to the numbers shown
+    // in the summary card above, at any scale (a single day's total or a month's).
+    const n = examList.length;
+    const baseTotal = Math.floor(bigCount / n);
+    const totalRemainder = bigCount - baseTotal * n;
+    const rowTotals = Array.from({ length: n }, (_, i) => baseTotal + (i < totalRemainder ? 1 : 0));
+
+    let toDistribute = attended;
     examRows = examList.map((exam, i) => {
-      const rowsLeft = examList.length - i;
-      const share = Math.max(0, Math.min(memberCount, Math.round(toDistribute / rowsLeft)));
+      const rowsLeft = n - i;
+      const share = Math.max(0, Math.min(rowTotals[i], Math.round(toDistribute / rowsLeft)));
       toDistribute -= share;
-      return { ...exam, total: memberCount, attended: share };
+      return { ...exam, total: rowTotals[i], attended: share };
     });
   }
   const barPct = goalPct;
