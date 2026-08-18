@@ -4926,7 +4926,7 @@ function GroupMembersScreen({ onBack, group, zone, isAdmin, title, hideCountRow,
                 </div>
                 {/* Attendance percentage */}
                 <div className="flex items-center gap-1 shrink-0 ml-2">
-                  <RatingBadge letter={member.rating} />
+                  <RatingBadge letter={subgroupLetter ?? member.rating} />
                   {/* Attendance chip — same design as the percentage chip in the Available Groups list */}
                   <div
                     className="rounded-[4px] h-6 px-2 flex items-center justify-center shrink-0"
@@ -5622,7 +5622,7 @@ function SubgroupDetailScreen({ onBack, sg, groupName, onTodayGoal, onMonthlyGoa
                       </span>
                     </div>
                     <div className="flex items-center gap-1 shrink-0 ml-2">
-                      <RatingBadge letter={member.rating} />
+                      <RatingBadge letter={sg.letter} />
                       <div className="rounded-[16px] px-3 py-1 shrink-0" style={{ backgroundColor: chip.bg }}>
                         <span
                           className="font-['Noto_Sans',sans-serif] font-medium text-[12px] leading-[16px]"
@@ -6301,7 +6301,7 @@ function ExamAttendanceMembersScreen({ examName, attended, onBack, title = "Exam
                       </span>
                     </div>
                     <div className="flex items-center gap-1 shrink-0 ml-2">
-                      <RatingBadge letter={member.rating} />
+                      <RatingBadge letter={subgroupLetter ?? member.rating} />
                       <div className="rounded-[16px] px-3 py-1 shrink-0 whitespace-nowrap" style={{ backgroundColor: chip.bg }}>
                         <span
                           className="font-['Noto_Sans',sans-serif] font-medium text-[12px] leading-[16px]"
@@ -6527,7 +6527,7 @@ function MonthlyGoalExamDetailScreen({ examName, group, sg, override, examTotals
                       </span>
                     </div>
                     <div className="flex items-center gap-1 shrink-0 ml-2">
-                      <RatingBadge letter={member.rating} />
+                      <RatingBadge letter={override ? member.rating : sg.letter} />
                       <div className="rounded-[4px] h-6 px-2 flex items-center justify-center shrink-0" style={{ backgroundColor: chip.bg }}>
                         <span className="font-['Noto_Sans',sans-serif] text-[12px] font-normal" style={{ color: chip.text }}>{member.pct.toFixed(1)}%</span>
                       </div>
