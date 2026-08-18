@@ -4978,24 +4978,34 @@ function GoalDetailScreen({ mode, sg, onBack, onSelectExam, onViewAttendance, ov
 
   const title = mode === "today" ? "Today's goal" : "Monthly goal";
 
-  // Every number here is derived bottom-up from the exam list: each exam's total is the
-  // current member count (the whole group, or a subgroup's own count when sg is scoped
-  // to one), each exam's attended is its own attendance count (scaled down proportionally
-  // for a subgroup), and the summary card is simply the sum of those per-exam numbers —
-  // so the top card can never drift out of sync with the rows below it.
-  const memberCount = override ? MEMBER_LIST.length : sg.members;
-  const examRows = EXAM_LIST.map(exam => ({
-    ...exam,
-    total: memberCount,
-    attended: override
-      ? exam.attended
-      : Math.min(memberCount, Math.round((exam.attended / MEMBER_LIST.length) * memberCount)),
-  }));
-  const bigCount = examRows.reduce((sum, e) => sum + e.total, 0);
-  const attended = examRows.reduce((sum, e) => sum + e.attended, 0);
-  const remaining = Math.max(bigCount - attended, 0);
-  const barPct = bigCount > 0 ? (attended / bigCount) * 100 : 0;
-  const goalPct = barPct;
+  // The admin's own group-level entry (override set) keeps its fixed Figma numbers — not
+  // derived from any subgroup's math. Reached from a specific subgroup instead, sg.goalPct
+  // is the authoritative percentage for that subgroup, and every other number here (the
+  // exam-list total, attended, remaining, and each individual exam row) is derived from
+  // it, so nothing on this screen can drift out of sync with sg.goalPct.
+  let examRows: Array<ExamListItem & { total: number; attended: number }>;
+  let bigCount: number, attended: number, remaining: number, goalPct: number;
+  if (override) {
+    bigCount = override.bigCount;
+    attended = override.attended;
+    remaining = override.remaining;
+    goalPct = override.goalPct;
+    examRows = EXAM_LIST.map(exam => ({ ...exam }));
+  } else {
+    const memberCount = sg.members;
+    bigCount = memberCount * EXAM_LIST.length;
+    attended = Math.round(bigCount * sg.goalPct / 100);
+    remaining = Math.max(bigCount - attended, 0);
+    goalPct = sg.goalPct;
+    let toDistribute = attended;
+    examRows = EXAM_LIST.map((exam, i) => {
+      const rowsLeft = EXAM_LIST.length - i;
+      const share = Math.max(0, Math.min(memberCount, Math.round(toDistribute / rowsLeft)));
+      toDistribute -= share;
+      return { ...exam, total: memberCount, attended: share };
+    });
+  }
+  const barPct = goalPct;
 
   const chipColor = pctChipStyle(goalPct);
 
@@ -5315,14 +5325,13 @@ function SubgroupDetailScreen({ onBack, sg, groupName, onTodayGoal, onMonthlyGoa
     sortBy === "alphabetical" ? a.name.localeCompare(b.name) : b.pct - a.pct
   ));
 
-  // Same bottom-up derivation as GoalDetailScreen (Today's/Monthly Goal), so this preview
-  // card — and the goal chip in the header above it — always show the exact numbers you'll
-  // see after tapping in: each exam's total is this subgroup's member count, its attended
-  // is scaled proportionally from the exam's group-wide count, and the total/attended here
-  // are just the sum across the exam list.
-  const examAttendedSum = EXAM_LIST.reduce((sum, exam) => sum + Math.min(sg.members, Math.round((exam.attended / MEMBER_LIST.length) * sg.members)), 0);
+  // sg.goalPct is this subgroup's authoritative percentage (kept fixed, e.g. Subgroup A
+  // stays at 96%) — everything else here is derived from it, matching the same derivation
+  // GoalDetailScreen (Today's/Monthly Goal) uses, so this preview card and its goal chip
+  // always show the exact numbers you'll see after tapping in.
   const examTotalSum = EXAM_LIST.length * sg.members;
-  const examPct = examTotalSum > 0 ? (examAttendedSum / examTotalSum) * 100 : 0;
+  const examAttendedSum = Math.round(examTotalSum * sg.goalPct / 100);
+  const examPct = sg.goalPct;
   const goalChipColor = pctChipStyle(examPct);
   const todayAttended = examAttendedSum;
   const todayTotal = examTotalSum;
