@@ -5580,7 +5580,7 @@ function SubgroupListScreen({ onBack, group, subgroups, onDetail, onCreateNew }:
   const otherGroups = subgroups.filter(s => !s.isMyGroup).slice().sort((a, b) => {
     if (sortBy === "attendance") return b.goalPct - a.goalPct;
     if (sortBy === "memberCount") return b.members - a.members;
-    return a.captain.localeCompare(b.captain);
+    return a.letter.localeCompare(b.letter);
   });
 
   function SubgroupCard({ sg }: { sg: typeof SUBGROUPS[0] }) {
