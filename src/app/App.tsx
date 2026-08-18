@@ -5005,11 +5005,18 @@ function GoalDetailScreen({ mode, sg, onBack, onSelectExam, onViewAttendance, ov
     examRows = examList.map(exam => ({ ...exam }));
   } else {
     const memberCount = sg.members;
-    bigCount = memberCount * examList.length;
+    // Today's total is a single day's worth of exams (member count × today's exam count).
+    // Monthly's total is a genuine month-scale aggregate — roughly 30 days at a typical
+    // daily rate of ~5 exams per member — so it's always meaningfully larger than any one
+    // day's total (e.g. 10 members × 5 × 30 = 1500, well above a ~40-60 daily range),
+    // rather than just the count of exam-type rows shown below.
+    bigCount = mode === "today" ? memberCount * examList.length : memberCount * 5 * 30;
     attended = Math.round(bigCount * sg.goalPct / 100);
     remaining = Math.max(bigCount - attended, 0);
     goalPct = sg.goalPct;
-    let toDistribute = attended;
+    // Exam rows always reflect this subgroup's own member count per exam type, independent
+    // of the (possibly month-scaled) aggregate above.
+    let toDistribute = Math.round(memberCount * examList.length * sg.goalPct / 100);
     examRows = examList.map((exam, i) => {
       const rowsLeft = examList.length - i;
       const share = Math.max(0, Math.min(memberCount, Math.round(toDistribute / rowsLeft)));
@@ -5344,7 +5351,9 @@ function SubgroupDetailScreen({ onBack, sg, groupName, onTodayGoal, onMonthlyGoa
   const goalChipColor = pctChipStyle(sg.goalPct);
   const todayTotal = EXAM_LIST.length * sg.members;
   const todayAttended = Math.round(todayTotal * sg.goalPct / 100);
-  const monthTotal = MONTHLY_EXAM_LIST.length * sg.members;
+  // Monthly total is a month-scale aggregate (see GoalDetailScreen), not the exam-type row
+  // count, so it's always meaningfully larger than a single day's total.
+  const monthTotal = sg.members * 5 * 30;
   const monthAttended = Math.round(monthTotal * sg.goalPct / 100);
   const todayPct = sg.goalPct;
   const monthPct = sg.goalPct;
