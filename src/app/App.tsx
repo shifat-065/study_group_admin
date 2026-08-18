@@ -5109,7 +5109,15 @@ function GoalDetailScreen({ mode, sg, onBack, onSelectExam, onViewAttendance, ov
 
             {/* Exam rows */}
             <div className="flex flex-col gap-1">
-              {EXAM_LIST.map((exam) => (
+              {EXAM_LIST.map((exam) => {
+                // Group-level entry (override set) keeps the exam's authored group-wide
+                // total; a specific subgroup's Today's Goal scales down to that subgroup's
+                // own member count instead of the whole group's 64.
+                const total = override ? exam.total : sg.members;
+                const attended = override
+                  ? exam.attended
+                  : Math.min(sg.members, Math.round((exam.attended / MEMBER_LIST.length) * sg.members));
+                return (
                 <button
                   key={exam.name}
                   onClick={() => onSelectExam(exam)}
@@ -5123,8 +5131,8 @@ function GoalDetailScreen({ mode, sg, onBack, onSelectExam, onViewAttendance, ov
                   </span>
                   <div className="flex items-center gap-1 shrink-0 ml-2">
                     <span className="font-['Noto_Sans',sans-serif] font-medium text-[14px] leading-[20px]" style={ns}>
-                      <span className="text-black">{exam.attended}/</span>
-                      <span className="text-[#484848]">{exam.total}</span>
+                      <span className="text-black">{attended}/</span>
+                      <span className="text-[#484848]">{total}</span>
                     </span>
                     <svg className="size-6" fill="none" viewBox="0 0 24 24">
                       <mask id={`m-ar-${exam.name}`} maskUnits="userSpaceOnUse" style={{ maskType: "alpha" }} width="24" height="24">
@@ -5136,7 +5144,8 @@ function GoalDetailScreen({ mode, sg, onBack, onSelectExam, onViewAttendance, ov
                     </svg>
                   </div>
                 </button>
-              ))}
+                );
+              })}
             </div>
           </div>
 
