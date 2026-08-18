@@ -4779,7 +4779,7 @@ function SortBottomSheet({ value, onSelect, onClose, options = SORT_OPTIONS }: {
   );
 }
 
-function GroupMembersScreen({ onBack, group, zone, isAdmin, title, hideCountRow }: { onBack: () => void; group: Group; zone?: Zone; isAdmin?: boolean; title?: string; hideCountRow?: boolean }) {
+function GroupMembersScreen({ onBack, group, zone, isAdmin, title, hideCountRow, subgroupLetter }: { onBack: () => void; group: Group; zone?: Zone; isAdmin?: boolean; title?: string; hideCountRow?: boolean; subgroupLetter?: string }) {
   const ns = { fontVariationSettings: '"CTGR" 0, "wdth" 100' };
   const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState("");
@@ -4791,7 +4791,8 @@ function GroupMembersScreen({ onBack, group, zone, isAdmin, title, hideCountRow 
   const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
 
   const zoneConfig = zone ? ZONES[zone] : null;
-  const remaining = MEMBER_LIST.filter(m => !removedIds.has(m.memberId));
+  const remaining = MEMBER_LIST.filter(m => !removedIds.has(m.memberId))
+    .filter(m => !subgroupLetter || m.subgroup === subgroupLetter);
   const base = zoneConfig ? remaining.filter(m => zoneConfig.match(m.pct)) : remaining;
   const filtered = (query.trim() ? base.filter(m => m.name.toLowerCase().includes(query.trim().toLowerCase())) : base)
     .slice()
@@ -6101,7 +6102,7 @@ function CreateSubgroupScreen({ onBack, onCreate, existingCount }: { onBack: () 
 
 // ── Screen: Exam Attendance — Member list ─────────────────────────────────────
 
-function ExamAttendanceMembersScreen({ examName, attended, onBack, title = "Exam Attendance" }: { examName: string; attended: number; onBack: () => void; title?: string }) {
+function ExamAttendanceMembersScreen({ examName, attended, onBack, title = "Exam Attendance", subgroupLetter }: { examName: string; attended: number; onBack: () => void; title?: string; subgroupLetter?: string }) {
   const ns = { fontVariationSettings: '"CTGR" 0, "wdth" 100' };
   const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState("");
@@ -6109,14 +6110,18 @@ function ExamAttendanceMembersScreen({ examName, attended, onBack, title = "Exam
   const [sorting, setSorting] = useState(false);
   const [selected, setSelected] = useState<Member | null>(null);
 
+  // Reached from a specific subgroup's Today's Goal, only that subgroup's members should
+  // appear here — otherwise (the admin's own group-level entry) it's the whole group.
+  const pool = subgroupLetter ? MEMBER_LIST.filter(m => m.subgroup === subgroupLetter) : MEMBER_LIST;
+
   // Deterministically pick which members "attended" this specific exam, so the header
   // count and the per-row Attended/Not attended badges always agree, and different exams
   // show different attendees instead of always the same people.
-  const examOffset = examName.split("").reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 0) % MEMBER_LIST.length;
-  const rotatedMembers = [...MEMBER_LIST.slice(examOffset), ...MEMBER_LIST.slice(0, examOffset)];
+  const examOffset = examName.split("").reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 0) % pool.length;
+  const rotatedMembers = [...pool.slice(examOffset), ...pool.slice(0, examOffset)];
   const attendedIds = new Set(rotatedMembers.slice(0, attended).map(m => m.memberId));
 
-  const filtered = (query.trim() ? MEMBER_LIST.filter(m => m.name.toLowerCase().includes(query.trim().toLowerCase())) : MEMBER_LIST)
+  const filtered = (query.trim() ? pool.filter(m => m.name.toLowerCase().includes(query.trim().toLowerCase())) : pool)
     .slice()
     .sort((a, b) => {
       if (sortBy === "alphabetical") return a.name.localeCompare(b.name);
@@ -6186,7 +6191,7 @@ function ExamAttendanceMembersScreen({ examName, attended, onBack, title = "Exam
             className="font-['Noto_Sans',sans-serif] font-medium text-[16px] text-black tracking-[0.15px] leading-[24px]"
             style={ns}
           >
-            Exam attend ({attended}/{MEMBER_LIST.length})
+            Exam attend ({attended}/{pool.length})
           </span>
 
           {/* Column labels */}
@@ -6457,6 +6462,8 @@ function PrototypeApp() {
   const [selectedSubgroup, setSelectedSubgroup] = useState<SubgroupData | null>(null);
   const [selectedExamName, setSelectedExamName] = useState<string | null>(null);
   const [selectedExamAttended, setSelectedExamAttended] = useState(0);
+  const [selectedExamSubgroupLetter, setSelectedExamSubgroupLetter] = useState<string | null>(null);
+  const [memberAttendanceSubgroupLetter, setMemberAttendanceSubgroupLetter] = useState<string | null>(null);
   const [attendanceScreenTitle, setAttendanceScreenTitle] = useState("Exam Attendance");
   const [announcement, setAnnouncement] = useState({
     title: "New Announcements",
@@ -6533,7 +6540,7 @@ function PrototypeApp() {
             transition={slideTrans}
             className="absolute inset-0"
           >
-            <ExamAttendanceMembersScreen examName={selectedExamName} attended={selectedExamAttended} title={attendanceScreenTitle} onBack={goBack} />
+            <ExamAttendanceMembersScreen examName={selectedExamName} attended={selectedExamAttended} title={attendanceScreenTitle} subgroupLetter={selectedExamSubgroupLetter ?? undefined} onBack={goBack} />
           </motion.div>
         )}
 
@@ -6681,7 +6688,7 @@ function PrototypeApp() {
             transition={slideTrans}
             className="absolute inset-0"
           >
-            <GroupMembersScreen group={selectedGroup} isAdmin title="Member attendance" hideCountRow onBack={goBack} />
+            <GroupMembersScreen group={selectedGroup} isAdmin title="Member attendance" hideCountRow subgroupLetter={memberAttendanceSubgroupLetter ?? undefined} onBack={goBack} />
           </motion.div>
         )}
 
@@ -6995,8 +7002,19 @@ function PrototypeApp() {
               sg={selectedSubgroup}
               override={todayGoalOverride ?? undefined}
               onBack={goBack}
-              onSelectExam={(exam) => { setSelectedExamName(exam.name); setSelectedExamAttended(exam.attended); setAttendanceScreenTitle("Exam Attendance"); goTo("examAttendanceMembers"); }}
-              onViewAttendance={() => goTo("memberAttendance")}
+              onSelectExam={(exam) => {
+                setSelectedExamName(exam.name);
+                if (todayGoalOverride) {
+                  setSelectedExamAttended(exam.attended);
+                  setSelectedExamSubgroupLetter(null);
+                } else {
+                  setSelectedExamAttended(Math.min(selectedSubgroup.members, Math.round((exam.attended / MEMBER_LIST.length) * selectedSubgroup.members)));
+                  setSelectedExamSubgroupLetter(selectedSubgroup.letter);
+                }
+                setAttendanceScreenTitle("Exam Attendance");
+                goTo("examAttendanceMembers");
+              }}
+              onViewAttendance={() => { setMemberAttendanceSubgroupLetter(todayGoalOverride ? null : selectedSubgroup.letter); goTo("memberAttendance"); }}
             />
           </motion.div>
         )}
@@ -7018,7 +7036,7 @@ function PrototypeApp() {
               override={todayGoalOverride ?? undefined}
               onBack={goBack}
               onSelectExam={(exam) => { setSelectedExamName(exam.name); goTo("monthlyGoalExamDetail"); }}
-              onViewAttendance={() => goTo("memberAttendance")}
+              onViewAttendance={() => { setMemberAttendanceSubgroupLetter(todayGoalOverride ? null : selectedSubgroup.letter); goTo("memberAttendance"); }}
             />
           </motion.div>
         )}
