@@ -6257,7 +6257,7 @@ function ExamAttendanceMembersScreen({ examName, attended, onBack, title = "Exam
 // Reached by tapping a mandatory exam from the admin's Monthly Goal screen — richer than the
 // Today's Goal exam view: live-exam stats + the 31-day goal chart, then a member list
 // sorted/searched like Group Members (tap a row for the same detail sheet).
-function MonthlyGoalExamDetailScreen({ examName, group, onBack }: { examName: string; group: Group; onBack: () => void }) {
+function MonthlyGoalExamDetailScreen({ examName, group, sg, override, onBack }: { examName: string; group: Group; sg: SubgroupData; override?: GoalDetailOverride; onBack: () => void }) {
   const ns = { fontVariationSettings: '"CTGR" 0, "wdth" 100' };
   const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState("");
@@ -6267,7 +6267,15 @@ function MonthlyGoalExamDetailScreen({ examName, group, onBack }: { examName: st
   const [removing, setRemoving] = useState<Member | null>(null);
   const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
 
-  const remaining = MEMBER_LIST.filter(m => !removedIds.has(m.memberId));
+  // Group-level entry (override set) shows the whole group; reached from a specific
+  // subgroup's Monthly Goal, only that subgroup's own members/stats should show here.
+  const goalPct = override ? override.goalPct : sg.goalPct;
+  const monthTotal = override ? override.bigCount : sg.members * 4;
+  const monthAttended = override ? override.attended : sg.attended;
+  const monthRemaining = override ? override.remaining : Math.max(monthTotal - monthAttended, 0);
+  const monthBarPct = override ? override.barPct : monthTotal > 0 ? (monthAttended / monthTotal) * 100 : 0;
+
+  const remaining = MEMBER_LIST.filter(m => !removedIds.has(m.memberId) && (override || m.subgroup === sg.letter));
   const filtered = (query.trim() ? remaining.filter(m => m.name.toLowerCase().includes(query.trim().toLowerCase())) : remaining)
     .slice()
     .sort((a, b) => {
@@ -6340,24 +6348,24 @@ function MonthlyGoalExamDetailScreen({ examName, group, onBack }: { examName: st
               <div className="border border-[#e3e3e3] rounded-[12px] p-3 flex flex-col gap-3">
                 <div className="flex items-center justify-between w-full">
                   <span className="font-['Noto_Sans',sans-serif] font-normal text-[14px] text-[#484848] leading-[20px]" style={ns}>Live Exams (Estimated)</span>
-                  <div className="rounded-[4px] px-2 h-5 flex items-center" style={{ backgroundColor: pctChipStyle(ADMIN_GOAL_OVERRIDE.goalPct).bg }}>
-                    <span className="font-['Noto_Sans',sans-serif] font-normal text-[12px] leading-[16px]" style={{ ...ns, color: pctChipStyle(ADMIN_GOAL_OVERRIDE.goalPct).text }}>
-                      {ADMIN_GOAL_OVERRIDE.goalPct.toFixed(1)}%
+                  <div className="rounded-[4px] px-2 h-5 flex items-center" style={{ backgroundColor: pctChipStyle(goalPct).bg }}>
+                    <span className="font-['Noto_Sans',sans-serif] font-normal text-[12px] leading-[16px]" style={{ ...ns, color: pctChipStyle(goalPct).text }}>
+                      {goalPct.toFixed(1)}%
                     </span>
                   </div>
                 </div>
-                <span className="font-['Noto_Sans',sans-serif] font-medium text-[16px] text-black tracking-[0.15px] leading-6" style={ns}>{ADMIN_GOAL_OVERRIDE.bigCount}</span>
-                <ActivityProgressBar pct={ADMIN_GOAL_OVERRIDE.barPct} />
+                <span className="font-['Noto_Sans',sans-serif] font-medium text-[16px] text-black tracking-[0.15px] leading-6" style={ns}>{monthTotal}</span>
+                <ActivityProgressBar pct={monthBarPct} />
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
                     <div className="size-2 rounded-full bg-[#1441cc] shrink-0" />
                     <span className="font-['Noto_Sans',sans-serif] font-medium text-[12px] text-[#787878] leading-4" style={ns}>Attended:</span>
-                    <span className="font-['Noto_Sans',sans-serif] font-medium text-[12px] text-black leading-4" style={ns}>{ADMIN_GOAL_OVERRIDE.attended}</span>
+                    <span className="font-['Noto_Sans',sans-serif] font-medium text-[12px] text-black leading-4" style={ns}>{monthAttended}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <div className="size-2 rounded-full bg-[#d6e4ff] shrink-0" />
                     <span className="font-['Noto_Sans',sans-serif] font-medium text-[12px] text-[#787878] leading-4" style={ns}>Remaining (Est):</span>
-                    <span className="font-['Noto_Sans',sans-serif] font-medium text-[12px] text-black leading-4" style={ns}>{ADMIN_GOAL_OVERRIDE.remaining}</span>
+                    <span className="font-['Noto_Sans',sans-serif] font-medium text-[12px] text-black leading-4" style={ns}>{monthRemaining}</span>
                   </div>
                 </div>
               </div>
@@ -7041,7 +7049,7 @@ function PrototypeApp() {
           </motion.div>
         )}
 
-        {screen === "monthlyGoalExamDetail" && selectedExamName && selectedGroup && (
+        {screen === "monthlyGoalExamDetail" && selectedExamName && selectedGroup && selectedSubgroup && (
           <motion.div
             key="monthlyGoalExamDetail"
             custom={dir}
@@ -7052,7 +7060,13 @@ function PrototypeApp() {
             transition={slideTrans}
             className="absolute inset-0"
           >
-            <MonthlyGoalExamDetailScreen examName={selectedExamName} group={selectedGroup} onBack={goBack} />
+            <MonthlyGoalExamDetailScreen
+              examName={selectedExamName}
+              group={selectedGroup}
+              sg={selectedSubgroup}
+              override={todayGoalOverride ?? undefined}
+              onBack={goBack}
+            />
           </motion.div>
         )}
       </AnimatePresence>
