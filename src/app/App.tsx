@@ -2658,23 +2658,13 @@ const JOINING_REQUESTS: JoiningRequest[] = [
   { name: "Amina Jahan", degree: "BBA", level: 2, exams: 150, memberId: "WS231", since: "23 Mar 2023", rating: "C", preparingFor: "Bank", gender: "Female", birthday: "24 Dec", majorSubject: "English", institute: "University of Dhaka", district: "Dhaka", notes: "Please accept my joining request. Vestibulum tempus imperdiet sem ac porttitor. Vivamus pulvinar commodo orci, suscipit porttitor velit elementum non. Fusce nec pellentesque erat, id lobortis nunc." },
 ];
 
-// Filled colored badge for a member's attendance rating (A/B/C). Deliberately not a plain
-// circled letter — that looked identical to the "Subgroup A/B/C/D/E" section headers next to
-// it, making people think the letters had to match. The color fill (green/yellow/red, same
-// language as the attendance % chip) marks this as a graded score instead.
 function RatingBadge({ letter, size = 20 }: { letter: string; size?: number }) {
-  const style = letter === "A" ? CHIP_STYLES.green : letter === "B" ? CHIP_STYLES.yellow : CHIP_STYLES.red;
   return (
-    <div
-      className="rounded-[4px] flex items-center justify-center shrink-0"
-      style={{ width: size, height: size, backgroundColor: style.bg }}
-    >
-      <span
-        className="font-['Noto_Sans',sans-serif] font-semibold leading-none"
-        style={{ fontSize: size * 0.6, color: style.text }}
-      >
-        {letter}
-      </span>
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      <svg className="absolute inset-0 size-full" fill="none" viewBox="0 0 20 20">
+        <circle cx="10" cy="10" r="9.5" stroke="#484848" />
+      </svg>
+      <span className="absolute inset-0 flex items-center justify-center font-['Noto_Sans',sans-serif] font-medium text-[14px] text-[#484848] leading-none">{letter}</span>
     </div>
   );
 }
