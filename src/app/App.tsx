@@ -5315,14 +5315,21 @@ function SubgroupDetailScreen({ onBack, sg, groupName, onTodayGoal, onMonthlyGoa
     sortBy === "alphabetical" ? a.name.localeCompare(b.name) : b.pct - a.pct
   ));
 
-  const goalChipColor = pctChipStyle(sg.goalPct);
-
-  const todayAttended = Math.round(sg.members * sg.goalPct / 100);
-  const todayTotal = sg.members;
-  const monthAttended = sg.attended;
-  const monthTotal = sg.members * 4;
-  const todayPct = sg.goalPct;
-  const monthPct = Math.round((sg.attended / (sg.members * 4)) * 100);
+  // Same bottom-up derivation as GoalDetailScreen (Today's/Monthly Goal), so this preview
+  // card — and the goal chip in the header above it — always show the exact numbers you'll
+  // see after tapping in: each exam's total is this subgroup's member count, its attended
+  // is scaled proportionally from the exam's group-wide count, and the total/attended here
+  // are just the sum across the exam list.
+  const examAttendedSum = EXAM_LIST.reduce((sum, exam) => sum + Math.min(sg.members, Math.round((exam.attended / MEMBER_LIST.length) * sg.members)), 0);
+  const examTotalSum = EXAM_LIST.length * sg.members;
+  const examPct = examTotalSum > 0 ? (examAttendedSum / examTotalSum) * 100 : 0;
+  const goalChipColor = pctChipStyle(examPct);
+  const todayAttended = examAttendedSum;
+  const todayTotal = examTotalSum;
+  const monthAttended = examAttendedSum;
+  const monthTotal = examTotalSum;
+  const todayPct = examPct;
+  const monthPct = examPct;
 
   function GoalCard({ title, attended, total, footerLabel, footerPct, onPress }: {
     title: string; attended: number; total: number; footerLabel: string; footerPct: number; onPress: () => void;
@@ -5469,14 +5476,14 @@ function SubgroupDetailScreen({ onBack, sg, groupName, onTodayGoal, onMonthlyGoa
                     className="font-['Noto_Sans',sans-serif] font-normal text-[12px] leading-[16px]"
                     style={{ ...ns, color: goalChipColor.text }}
                   >
-                    {sg.goalPct.toFixed(1)}%
+                    {examPct.toFixed(1)}%
                   </span>
                 </div>
                 <span
                   className="font-['Noto_Sans',sans-serif] font-normal text-[12px] text-[#484848] leading-[16px]"
                   style={ns}
                 >
-                  {sg.members} members • {sg.attended} attended
+                  {sg.members} members • {examAttendedSum} attended
                 </span>
               </div>
             </div>
