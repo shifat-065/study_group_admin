@@ -5040,26 +5040,19 @@ function GoalDetailScreen({ mode, sg, onBack, onSelectExam, onViewAttendance, ov
     remaining = Math.max(bigCount - attended, 0);
   }
 
-  // Split bigCount unevenly across the exam rows (weighted, largest-remainder rounding so
-  // it still sums back to bigCount exactly) — real exams don't all draw the same number of
-  // attempts, so each row gets a distinct-looking share instead of ~n identical numbers.
-  // Attended is split the same way across those per-row totals, so both the row totals and
-  // the row attended counts always sum to the numbers shown in the summary card above.
+  // Every row's total is the same fixed number (one exam attempt per member — bigCount / n,
+  // which divides evenly for Today's goal since bigCount = memberCount × n) — real exam
+  // totals per member don't vary row to row. Only attended varies per row (weighted, so
+  // it doesn't look like a flat percentage repeated on every button), and both the row
+  // totals and the row attended counts still sum exactly to the numbers in the summary
+  // card above.
   const n = examList.length;
+  const baseTotal = Math.floor(bigCount / n);
+  const totalRemainder = bigCount - baseTotal * n;
+  const rowTotals = Array.from({ length: n }, (_, i) => baseTotal + (i < totalRemainder ? 1 : 0));
+
   const weights = Array.from({ length: n }, (_, i) => 0.65 + ((i * 53 + 17) % 71) / 100);
-  const weightSum = weights.reduce((a, b) => a + b, 0);
-  const distribute = (count: number) => {
-    const raw = weights.map(w => (count * w) / weightSum);
-    const floors = raw.map(Math.floor);
-    const used = floors.reduce((a, b) => a + b, 0);
-    const remainder = count - used;
-    const order = raw.map((v, i) => ({ i, frac: v - floors[i] })).sort((a, b) => b.frac - a.frac);
-    const result = [...floors];
-    for (let k = 0; k < remainder; k++) result[order[k].i] += 1;
-    return result;
-  };
-  const rowTotals = distribute(bigCount);
-  const rowAttendedRaw = rowTotals.map((t, i) => Math.min(t, Math.round(t * goalPct / 100)));
+  const rowAttendedRaw = rowTotals.map((t, i) => Math.min(t, Math.round(t * goalPct * weights[i] / 100)));
   const rowAttendedSum = rowAttendedRaw.reduce((a, b) => a + b, 0);
   let attendedDiff = attended - rowAttendedSum;
   const rowAttended = [...rowAttendedRaw];
