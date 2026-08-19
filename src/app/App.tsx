@@ -4646,7 +4646,7 @@ function AdminMembersHubScreen({ group, memberList, onBack, onTotalMembers, onSe
 
 // ── Screen: Group Members ─────────────────────────────────────────────────────
 
-function RemoveFromSubgroupDialog({ firstName, subgroupLetter, groupName, onCancel, onConfirm }: { firstName: string; subgroupLetter: string; groupName: string; onCancel: () => void; onConfirm: () => void }) {
+function RemoveFromSubgroupDialog({ firstName, subgroupLetter, groupName, removeFromGroup, onCancel, onConfirm }: { firstName: string; subgroupLetter: string; groupName: string; removeFromGroup?: boolean; onCancel: () => void; onConfirm: () => void }) {
   return (
     <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/40 px-6">
       <motion.div
@@ -4658,10 +4658,12 @@ function RemoveFromSubgroupDialog({ firstName, subgroupLetter, groupName, onCanc
       >
         <div className="pt-[12px] px-[12px] pb-0 flex flex-col gap-[16px]">
           <p className="font-['Noto_Sans',sans-serif] font-normal text-[24px] leading-[32px] text-black" style={{ fontVariationSettings: '"CTGR" 0, "wdth" 100' }}>
-            Remove {firstName} from Subgroup {subgroupLetter}?
+            {removeFromGroup ? `Remove ${firstName} from ${groupName}?` : `Remove ${firstName} from Subgroup ${subgroupLetter}?`}
           </p>
           <p className="font-['Noto_Sans',sans-serif] font-normal text-[14px] leading-[20px] text-[#484848]" style={{ fontVariationSettings: '"CTGR" 0, "wdth" 100' }}>
-            They'll stay a member of {groupName} — this only removes them from the subgroup. You can add them back anytime.
+            {removeFromGroup
+              ? "This removes them from the group entirely and reduces the total member count. This can't be undone."
+              : `They'll stay a member of ${groupName} — this only removes them from the subgroup. You can add them back anytime.`}
           </p>
         </div>
         <div className="flex gap-[8px] items-center p-[12px]">
@@ -4908,7 +4910,7 @@ function SortBottomSheet({ value, onSelect, onClose, options = SORT_OPTIONS }: {
   );
 }
 
-function GroupMembersScreen({ onBack, group, memberList, zone, isAdmin, title, hideCountRow, subgroupLetter, targetPct, takingNewMembers = true }: { onBack: () => void; group: Group; memberList: Member[]; zone?: Zone; isAdmin?: boolean; title?: string; hideCountRow?: boolean; subgroupLetter?: string; targetPct?: number; takingNewMembers?: boolean }) {
+function GroupMembersScreen({ onBack, group, memberList, onRemoveMember, zone, isAdmin, title, hideCountRow, subgroupLetter, targetPct, takingNewMembers = true }: { onBack: () => void; group: Group; memberList: Member[]; onRemoveMember?: (memberId: string) => void; zone?: Zone; isAdmin?: boolean; title?: string; hideCountRow?: boolean; subgroupLetter?: string; targetPct?: number; takingNewMembers?: boolean }) {
   const ns = { fontVariationSettings: '"CTGR" 0, "wdth" 100' };
   const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState("");
@@ -4960,9 +4962,14 @@ function GroupMembersScreen({ onBack, group, memberList, zone, isAdmin, title, h
             firstName={removing.name.split(" ")[0]}
             subgroupLetter={removing.subgroup}
             groupName={group.name}
+            removeFromGroup={!subgroupLetter}
             onCancel={() => setRemoving(null)}
             onConfirm={() => {
-              setRemovedIds(prev => new Set(prev).add(removing.memberId));
+              if (subgroupLetter) {
+                setRemovedIds(prev => new Set(prev).add(removing.memberId));
+              } else {
+                onRemoveMember?.(removing.memberId);
+              }
               setRemoving(null);
             }}
           />
@@ -6986,7 +6993,7 @@ function PrototypeApp() {
             transition={slideTrans}
             className="absolute inset-0"
           >
-            <GroupMembersScreen group={selectedGroup} memberList={memberList} zone={selectedZone} isAdmin onBack={goBack} />
+            <GroupMembersScreen group={selectedGroup} memberList={memberList} onRemoveMember={(id) => setMemberList(prev => prev.filter(m => m.memberId !== id))} zone={selectedZone} isAdmin onBack={goBack} />
           </motion.div>
         )}
 
@@ -7227,7 +7234,7 @@ function PrototypeApp() {
             transition={slideTrans}
             className="absolute inset-0"
           >
-            <GroupMembersScreen group={selectedGroup} memberList={memberList} isAdmin={membersAdminMode} takingNewMembers={takingNewMembers} onBack={goBack} />
+            <GroupMembersScreen group={selectedGroup} memberList={memberList} onRemoveMember={(id) => setMemberList(prev => prev.filter(m => m.memberId !== id))} isAdmin={membersAdminMode} takingNewMembers={takingNewMembers} onBack={goBack} />
           </motion.div>
         )}
 
