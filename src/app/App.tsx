@@ -4509,11 +4509,11 @@ function SubgroupSortBottomSheet({ value, onSelect, onClose }: { value: Subgroup
 
 // ── Screen: Admin / Members hub ─────────────────────────────────────────────────
 
-const MEMBERS_ATTENDANCE_BARS = [
-  { month: "Jan", pct: 20 }, { month: "Feb", pct: 42 }, { month: "Mar", pct: 17 },
-  { month: "Apr", pct: 36 }, { month: "May", pct: 25 }, { month: "Jun", pct: 42 },
-  { month: "Jul", pct: 49 }, { month: "Aug", pct: 36 }, { month: "Sep", pct: 31 },
-  { month: "Oct", pct: 74 }, { month: "Nov", pct: 56 }, { month: "Dec", pct: 36 },
+const MEMBERS_COUNT_BARS = [
+  { month: "Jan", count: 18 }, { month: "Feb", count: 24 }, { month: "Mar", count: 22 },
+  { month: "Apr", count: 29 }, { month: "May", count: 27 }, { month: "Jun", count: 34 },
+  { month: "Jul", count: 38 }, { month: "Aug", count: 33 }, { month: "Sep", count: 41 },
+  { month: "Oct", count: 52 }, { month: "Nov", count: 47 }, { month: "Dec", count: 58 },
 ];
 
 function zoneBarColor(pct: number) {
@@ -4542,28 +4542,19 @@ function AdminMembersHubScreen({ group, onBack, onTotalMembers, onSelectZone, on
               </div>
             </button>
             <div className="border-t border-[#e3e3e3] mx-3" />
-            <p className="px-3 font-['Noto_Sans',sans-serif] font-medium text-[14px] text-black leading-5">% of members' attendance, by month</p>
+            <p className="px-3 font-['Noto_Sans',sans-serif] font-medium text-[14px] text-black leading-5">Members, by month</p>
             <div className="px-3 flex flex-col gap-2">
               <div className="grid grid-cols-12 gap-1 h-[100px] items-end">
-                {MEMBERS_ATTENDANCE_BARS.map(bar => (
-                  <div key={bar.month} className="rounded-t-sm" style={{ height: `${bar.pct}px`, backgroundColor: zoneBarColor(bar.pct) }} />
+                {MEMBERS_COUNT_BARS.map(bar => (
+                  <div key={bar.month} className="rounded-t-sm bg-[#1441cc]" style={{ height: `${(bar.count / Math.max(...MEMBERS_COUNT_BARS.map(b => b.count))) * 90}px` }} />
                 ))}
               </div>
               <div className="grid grid-cols-12 text-right">
-                {MEMBERS_ATTENDANCE_BARS.map(bar => (
+                {MEMBERS_COUNT_BARS.map(bar => (
                   <span key={bar.month} className="font-['Noto_Sans',sans-serif] font-medium text-[10px] text-[#8f8d8d] leading-4">{bar.month}</span>
                 ))}
               </div>
             </div>
-            <div className="flex items-center justify-between px-3">
-              {[{ c: "#f04d30", l: "0 - 40%" }, { c: "#ffcb61", l: "41 - 75%" }, { c: "#6fcf7e", l: "76 - 100%" }].map(({ c, l }) => (
-                <div key={l} className="flex items-center gap-1 p-1">
-                  <div className="size-2.5 rounded-[4px] shrink-0" style={{ backgroundColor: c }} />
-                  <span className="font-['Noto_Sans',sans-serif] text-[12px] text-[#484848] leading-4">{l}</span>
-                </div>
-              ))}
-            </div>
-            <p className="text-center font-['Noto_Sans',sans-serif] font-medium text-[12px] text-[#484848] leading-4">{group.avgAttendance.toFixed(1)}% avg. attendance</p>
           </div>
         </div>
 
