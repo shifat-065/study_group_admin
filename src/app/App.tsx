@@ -4542,6 +4542,7 @@ function AdminMembersHubScreen({ group, onBack, onTotalMembers, onSelectZone, on
               </div>
             </button>
             <div className="border-t border-[#e3e3e3] mx-3" />
+            <p className="px-3 font-['Noto_Sans',sans-serif] font-medium text-[14px] text-black leading-5">% of members' attendance, by month</p>
             <div className="px-3 flex flex-col gap-2">
               <div className="grid grid-cols-12 gap-1 h-[100px] items-end">
                 {MEMBERS_ATTENDANCE_BARS.map(bar => (
