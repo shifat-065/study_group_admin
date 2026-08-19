@@ -2573,7 +2573,13 @@ const EXAM_CUSTOM_CATEGORIES: ExamCustomCategory[] = [
       { id: "bcs-51-10", label: "৪০ দিনে ৪৭তম বিসিএস প্রস্তুতি - Archived", checked: true },
     ],
   },
-  { id: "bcs-newcomers", label: "নতুনদের বিসিএস প্রস্তুতি", Icon: Banknote, expanded: false, items: [] },
+  {
+    id: "bcs-newcomers", label: "নতুনদের বিসিএস প্রস্তুতি", Icon: Banknote, expanded: false,
+    items: [
+      { id: "bcs-newcomers-1", label: "ডেইলি কুইজ [২০০ দিন]", checked: true },
+      { id: "bcs-newcomers-2", label: "নতুনদের বিসিএস প্রস্তুতি - ২০০ দিনে পুরো সিলেবাস", checked: true },
+    ],
+  },
   { id: "prelim-written", label: "প্রিলি ও লিখিত সমন্বিত প্রস্তুতি", Icon: NotebookPen, expanded: false, items: [] },
   { id: "subject-care", label: "সাবজেক্ট কেয়ার", Icon: BookOpen, expanded: false, items: [] },
   { id: "job-solution", label: "জব সল্যুশন", Icon: Briefcase, expanded: false, items: [] },
