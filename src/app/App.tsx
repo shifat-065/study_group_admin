@@ -4526,6 +4526,10 @@ function AdminMembersHubScreen({ group, onBack, onTotalMembers, onSelectZone, on
     return acc;
   }, {} as Record<Zone, number>);
 
+  // Last bar always matches the real current total so the chart and the "Total members" row above it agree.
+  const memberCountBars = MEMBERS_COUNT_BARS.map((bar, i, arr) => i === arr.length - 1 ? { ...bar, count: group.members } : bar);
+  const maxMemberCount = Math.max(...memberCountBars.map(b => b.count));
+
   return (
     <div className="flex flex-col h-full bg-white overflow-hidden relative">
       <AppHeader title="Members" onBack={onBack} />
@@ -4544,13 +4548,16 @@ function AdminMembersHubScreen({ group, onBack, onTotalMembers, onSelectZone, on
             <div className="border-t border-[#e3e3e3] mx-3" />
             <p className="px-3 font-['Noto_Sans',sans-serif] font-medium text-[14px] text-black leading-5">Members, by month</p>
             <div className="px-3 flex flex-col gap-2">
-              <div className="grid grid-cols-12 gap-1 h-[100px] items-end">
-                {MEMBERS_COUNT_BARS.map(bar => (
-                  <div key={bar.month} className="rounded-t-sm bg-[#1441cc]" style={{ height: `${(bar.count / Math.max(...MEMBERS_COUNT_BARS.map(b => b.count))) * 90}px` }} />
+              <div className="grid grid-cols-12 gap-1 h-[116px] items-end">
+                {memberCountBars.map(bar => (
+                  <div key={bar.month} className="flex flex-col items-center justify-end gap-1 h-full">
+                    <span className="font-['Noto_Sans',sans-serif] font-medium text-[9px] text-[#484848] leading-3">{bar.count}</span>
+                    <div className="w-full rounded-t-sm bg-[#1441cc]" style={{ height: `${(bar.count / maxMemberCount) * 90}px` }} />
+                  </div>
                 ))}
               </div>
-              <div className="grid grid-cols-12 text-right">
-                {MEMBERS_COUNT_BARS.map(bar => (
+              <div className="grid grid-cols-12 text-center">
+                {memberCountBars.map(bar => (
                   <span key={bar.month} className="font-['Noto_Sans',sans-serif] font-medium text-[10px] text-[#8f8d8d] leading-4">{bar.month}</span>
                 ))}
               </div>
