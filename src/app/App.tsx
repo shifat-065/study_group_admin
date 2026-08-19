@@ -2558,10 +2558,6 @@ interface ExamCustomCategory { id: string; label: string; Icon: LucideIcon; expa
 // grouped by real cadence — 1 weekly, 5 daily, 1 monthly — instead of a separately hand-typed
 // 5-item subset that didn't cover the full list.
 const EXAM_CUSTOM_CATEGORIES: ExamCustomCategory[] = [
-  {
-    id: "weekly", label: "সাপ্তাহিক পরীক্ষা", Icon: Gift, expanded: true,
-    items: MANDATORY_EXAMS.slice(0, 1).map((exam, i) => ({ id: `weekly-${i + 1}`, label: exam.name, checked: true })),
-  },
   { id: "bcs-51", label: "৫১তম বিসিএস প্রস্তুতি", Icon: Landmark, expanded: false, items: [] },
   { id: "bcs-newcomers", label: "নতুনদের বিসিএস প্রস্তুতি", Icon: Banknote, expanded: false, items: [] },
   { id: "prelim-written", label: "প্রিলি ও লিখিত সমন্বিত প্রস্তুতি", Icon: NotebookPen, expanded: false, items: [] },
