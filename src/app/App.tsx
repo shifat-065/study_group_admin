@@ -2706,9 +2706,6 @@ function RequestCard({ request, onSelect }: { request: JoiningRequest; onSelect:
         <span className="font-['Noto_Sans',sans-serif] font-medium text-[16px] text-black leading-6">{request.name}</span>
       </div>
       <div className="flex items-center gap-3">
-        <div className="bg-[#eaeef6] rounded-[4px] px-2 h-5 flex items-center shrink-0">
-          <span className="font-['Noto_Sans',sans-serif] text-[10px] font-medium text-[#484848]">{request.degree}</span>
-        </div>
         <span className="font-['Noto_Sans',sans-serif] font-medium text-[12px] text-[#484848] leading-4">
           Level {request.level} • {request.exams} Exams
         </span>
