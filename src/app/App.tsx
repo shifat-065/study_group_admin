@@ -5848,11 +5848,17 @@ function SubgroupDetailScreen({ onBack, sg, groupName, onTodayGoal, onMonthlyGoa
 
 // ──────────────────────────────────────────────────────────────────────────────
 
-function SubgroupListScreen({ onBack, group, subgroups, onDetail, onCreateNew }: { onBack: () => void; group: Group; subgroups: typeof SUBGROUPS; onDetail: (sg: typeof SUBGROUPS[0]) => void; onCreateNew?: () => void }) {
+function SubgroupListScreen({ onBack, group, subgroups, onDetail, onCreateNew, flatAdminView }: { onBack: () => void; group: Group; subgroups: typeof SUBGROUPS; onDetail: (sg: typeof SUBGROUPS[0]) => void; onCreateNew?: () => void; flatAdminView?: boolean }) {
   const ns = { fontVariationSettings: '"CTGR" 0, "wdth" 100' };
   const [sortBy, setSortBy] = useState<SubgroupSort>("alphabetical");
   const [sorting, setSorting] = useState(false);
 
+  const myGroup = subgroups.find(s => s.isMyGroup)!;
+  const otherGroups = subgroups.filter(s => !s.isMyGroup).slice().sort((a, b) => {
+    if (sortBy === "attendance") return b.goalPct - a.goalPct;
+    if (sortBy === "memberCount") return b.members - a.members;
+    return a.letter.localeCompare(b.letter);
+  });
   const sortedGroups = subgroups.slice().sort((a, b) => {
     if (sortBy === "attendance") return b.goalPct - a.goalPct;
     if (sortBy === "memberCount") return b.members - a.members;
@@ -5896,6 +5902,19 @@ function SubgroupListScreen({ onBack, group, subgroups, onDetail, onCreateNew }:
             </span>
           </div>
         </div>
+        {!flatAdminView && (
+          <div className="flex flex-col gap-2 w-full">
+            <div className="flex items-center justify-between w-full">
+              <span className="font-['Noto_Sans',sans-serif] font-normal text-[14px] text-black leading-[20px]" style={ns}>
+                {"Today's goal"}
+              </span>
+              <span className="font-['Noto_Sans',sans-serif] font-normal text-[14px] text-black leading-[20px]" style={ns}>
+                {sg.goalPct.toFixed(1)}%
+              </span>
+            </div>
+            <SubgroupProgressBar pct={sg.goalPct} />
+          </div>
+        )}
       </div>
     );
   }
@@ -5933,11 +5952,35 @@ function SubgroupListScreen({ onBack, group, subgroups, onDetail, onCreateNew }:
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="flex flex-col gap-3 px-4 pt-4 pb-8">
-          {sortedGroups.map(sg => (
-            <SubgroupCard key={sg.letter} sg={sg} />
-          ))}
-        </div>
+        {flatAdminView ? (
+          <div className="flex flex-col gap-3 px-4 pt-4 pb-8">
+            {sortedGroups.map(sg => (
+              <SubgroupCard key={sg.letter} sg={sg} />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-6 px-4 pt-4 pb-8">
+            {/* My subgroup */}
+            <div className="flex flex-col gap-3">
+              <span className="font-['Noto_Sans',sans-serif] font-medium text-[16px] text-black tracking-[0.15px] leading-[24px]" style={ns}>
+                My subgroup
+              </span>
+              <SubgroupCard sg={myGroup} />
+            </div>
+
+            {/* Other subgroups */}
+            <div className="flex flex-col gap-3">
+              <span className="font-['Noto_Sans',sans-serif] font-medium text-[16px] text-black tracking-[0.15px] leading-[24px]" style={ns}>
+                Other subgroups
+              </span>
+              <div className="flex flex-col gap-3">
+                {otherGroups.map(sg => (
+                  <SubgroupCard key={sg.letter} sg={sg} />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {onCreateNew && (
@@ -6724,6 +6767,9 @@ function PrototypeApp() {
   const [showAddMember, setShowAddMember] = useState(false);
   const [showAddSubgroupMember, setShowAddSubgroupMember] = useState(false);
   const [subgroupsAdminMode, setSubgroupsAdminMode] = useState(false);
+  // Only the Admin Panel's "Subgroups" entry shows the flat management list (no "My subgroup"
+  // split, no progress bar) — the home screen's "Subgroups" chip keeps the member-facing view.
+  const [subgroupsFromAdminPanel, setSubgroupsFromAdminPanel] = useState(false);
   const [membersAdminMode, setMembersAdminMode] = useState(false);
   const snackbarTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dirRef = useRef<1 | -1>(1);
@@ -6814,7 +6860,7 @@ function PrototypeApp() {
               onActivityLog={() => goTo("activity")}
               onRank={() => goTo("rank")}
               onMembers={() => { setMembersAdminMode(true); goTo("members"); }}
-              onSubgroups={() => { setSubgroupsAdminMode(true); goTo("subgroups"); }}
+              onSubgroups={() => { setSubgroupsAdminMode(true); setSubgroupsFromAdminPanel(false); goTo("subgroups"); }}
               onTodayGoal={() => { setSelectedSubgroup(subgroups.find(s => s.isMyGroup) ?? subgroups[0]); setTodayGoalOverride(computeGroupGoalAggregate(subgroups, "today")); goTo("todayGoal"); }}
               onMonthlyGoal={() => { setSelectedSubgroup(subgroups.find(s => s.isMyGroup) ?? subgroups[0]); setTodayGoalOverride(computeGroupGoalAggregate(subgroups, "monthly")); goTo("monthlyGoal"); }}
               onDiscussion={() => goTo("discussion")}
@@ -6860,7 +6906,7 @@ function PrototypeApp() {
               onAddMember={() => setShowAddMember(true)}
               onSelectItem={(item) => {
                 if (item.screen === "adminMembersHub" || item.screen === "subgroups" || item.screen === "adminJoiningRequests" || item.screen === "adminAnnouncement" || item.screen === "adminExamCustomisation" || item.screen === "adminGroupSettings" || item.screen === "adminGroupRules") {
-                  if (item.screen === "subgroups") setSubgroupsAdminMode(true);
+                  if (item.screen === "subgroups") { setSubgroupsAdminMode(true); setSubgroupsFromAdminPanel(true); }
                   goTo(item.screen);
                 } else {
                   setSelectedAdminItem(item);
@@ -7177,6 +7223,7 @@ function PrototypeApp() {
             <SubgroupListScreen
               group={selectedGroup}
               subgroups={subgroups}
+              flatAdminView={subgroupsFromAdminPanel}
               onBack={goBack}
               onDetail={(sg) => { setSelectedSubgroup(sg); goTo("subgroupDetail"); }}
               onCreateNew={subgroupsAdminMode ? () => goTo("adminCreateSubgroup") : undefined}
