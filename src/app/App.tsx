@@ -2639,7 +2639,17 @@ const EXAM_CUSTOM_CATEGORIES: ExamCustomCategory[] = [
       { id: "job-solution-26", label: "অন্যান্য জব সল্যুশন রিভিশন", checked: true },
     ],
   },
-  { id: "bank-job-prep", label: "ব্যাংক নিয়োগ প্রস্তুতি", Icon: Camera, expanded: false, items: [] },
+  {
+    id: "bank-job-prep", label: "ব্যাংক নিয়োগ প্রস্তুতি", Icon: Camera, expanded: false,
+    items: [
+      { id: "bank-job-prep-1", label: "ব্যাংক নিয়োগ প্রস্তুতি — লং কোর্স", checked: true },
+      { id: "bank-job-prep-2", label: "ব্যাংক ডেইলি কুইজ [লং কোর্সের অংশ]", checked: true },
+      { id: "bank-job-prep-3", label: "ব্যাংক নিয়োগ বিষয়ভিত্তিক প্রস্তুতি", checked: true },
+      { id: "bank-job-prep-4", label: "ব্যাংক মডেল টেস্ট [সাপ্তাহিক]", checked: true },
+      { id: "bank-job-prep-5", label: "বাংলাদেশ ব্যাংক (AD) নিয়োগ প্রস্তুতি", checked: true },
+      { id: "bank-job-prep-6", label: "প্রাইভেট ব্যাংক প্রস্তুতি", checked: true },
+    ],
+  },
   { id: "teacher-registration", label: "শিক্ষক নিয়োগ ও নিবন্ধন", Icon: Ruler, expanded: false, items: [] },
   { id: "grade-9-20", label: "৯ম-২০তম গ্রেডের প্রস্তুতি", Icon: FileQuestion, expanded: false, items: [] },
   { id: "bar-council-bjs", label: "বার কাউন্সিল ও বিজেএস", Icon: Scale, expanded: false, items: [] },
