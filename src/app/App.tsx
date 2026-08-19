@@ -6,7 +6,7 @@ import {
   ArrowLeft, ChevronDown, Check, Info,
   UserPlus, Search, ArrowUpDown, ChevronRight,
   ThumbsUp, MessageCircle, Share2, Send, Globe, MoreHorizontal, ImageIcon, Star, User, Users,
-  CalendarDays, Archive, ClipboardCheck, Trophy, Megaphone, Settings, Layers, FileText, Gavel, Download, Copy, Pencil, X, Gift, Wallet, Landmark, UserMinus, Shield, Bell, Trash2,
+  CalendarDays, Archive, ClipboardCheck, Trophy, Megaphone, Settings, Layers, FileText, Gavel, Download, Copy, Pencil, X, Gift, Wallet, Landmark, UserMinus, Shield, Bell, Trash2, MoreVertical,
   Filter, Calendar, CheckCircle2, XCircle, Clock, BookOpen, Award, PlaySquare, FileSpreadsheet, Sparkles, ExternalLink, BarChart3,
   type LucideIcon,
 } from "lucide-react";
@@ -4634,6 +4634,41 @@ function RemoveFromSubgroupDialog({ firstName, subgroupLetter, groupName, onCanc
   );
 }
 
+function DeleteSubgroupDialog({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
+  return (
+    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/40 px-6">
+      <motion.div
+        initial={{ scale: 0.92, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.92, opacity: 0 }}
+        transition={{ type: "tween", duration: 0.18, ease: "easeOut" }}
+        className="w-full bg-white rounded-[12px] overflow-hidden"
+      >
+        <div className="pt-[20px] px-[16px] pb-0 flex flex-col gap-[12px]">
+          <p className="font-['Noto_Sans',sans-serif] font-medium text-[20px] leading-[28px] text-black" style={{ fontVariationSettings: '"CTGR" 0, "wdth" 100' }}>
+            Delete Subgroup?
+          </p>
+          <p className="font-['Noto_Sans',sans-serif] font-normal text-[14px] leading-[20px] text-[#484848]" style={{ fontVariationSettings: '"CTGR" 0, "wdth" 100' }}>
+            Are you sure you want to delete this subgroup? This action cannot be undone.
+          </p>
+        </div>
+        <div className="flex gap-[8px] items-center p-[16px] justify-end">
+          <button onClick={onConfirm} className="h-[48px] px-4 rounded-[8px] flex items-center justify-center">
+            <span className="font-['Noto_Sans',sans-serif] font-medium text-[14px] leading-[20px] text-[#d40000]" style={{ fontVariationSettings: '"CTGR" 0, "wdth" 100' }}>
+              Delete
+            </span>
+          </button>
+          <button onClick={onCancel} className="h-[48px] px-6 bg-[#1441cc] rounded-[8px] flex items-center justify-center">
+            <span className="font-['Noto_Sans',sans-serif] font-medium text-[14px] leading-[20px] text-white" style={{ fontVariationSettings: '"CTGR" 0, "wdth" 100' }}>
+              Cancel
+            </span>
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 // Bottom sheet shown when a member row is tapped — same "Member Details" layout as the
 // Joining Requests detail sheet, minus the notes/accept-reject (not applicable to an existing member).
 const MEMBER_MONTHLY_EXAM_TOTAL = 300;
@@ -5440,7 +5475,7 @@ function ChooseCaptainBottomSheet({ current, onCancel, onSave }: { current: stri
   );
 }
 
-function SubgroupDetailScreen({ onBack, sg, groupName, onTodayGoal, onMonthlyGoal, onAddMember, onCaptainSaved }: { onBack: () => void; sg: SubgroupData; groupName: string; onTodayGoal: () => void; onMonthlyGoal: () => void; onAddMember: () => void; onCaptainSaved: (name: string) => void }) {
+function SubgroupDetailScreen({ onBack, sg, groupName, onTodayGoal, onMonthlyGoal, onAddMember, onCaptainSaved, onDelete }: { onBack: () => void; sg: SubgroupData; groupName: string; onTodayGoal: () => void; onMonthlyGoal: () => void; onAddMember: () => void; onCaptainSaved: (name: string) => void; onDelete: () => void }) {
   const ns = { fontVariationSettings: '"CTGR" 0, "wdth" 100' };
   const [sortBy, setSortBy] = useState<MemberSort>("attendance");
   const [sorting, setSorting] = useState(false);
@@ -5449,6 +5484,8 @@ function SubgroupDetailScreen({ onBack, sg, groupName, onTodayGoal, onMonthlyGoa
   const [selected, setSelected] = useState<Member | null>(null);
   const [removing, setRemoving] = useState<Member | null>(null);
   const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
+  const [showMenu, setShowMenu] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const sortedMembers = MEMBER_LIST.filter(m => m.subgroup === sg.letter && !removedIds.has(m.memberId)).sort((a, b) => (
     sortBy === "alphabetical" ? a.name.localeCompare(b.name) : b.pct - a.pct
@@ -5551,10 +5588,16 @@ function SubgroupDetailScreen({ onBack, sg, groupName, onTodayGoal, onMonthlyGoa
             }}
           />
         )}
+        {showDeleteConfirm && (
+          <DeleteSubgroupDialog
+            onCancel={() => setShowDeleteConfirm(false)}
+            onConfirm={() => { setShowDeleteConfirm(false); onDelete(); }}
+          />
+        )}
       </AnimatePresence>
 
       {/* App bar */}
-      <div className="shrink-0 h-12 bg-white flex items-center px-1">
+      <div className="shrink-0 h-12 bg-white flex items-center px-1 relative">
         <button
           onClick={onBack}
           className="size-12 flex items-center justify-center rounded-full active:bg-gray-100 transition-colors"
@@ -5567,6 +5610,28 @@ function SubgroupDetailScreen({ onBack, sg, groupName, onTodayGoal, onMonthlyGoa
         >
           Subgroup
         </p>
+        <div className="ml-auto relative">
+          <button
+            onClick={() => setShowMenu(v => !v)}
+            aria-label="Subgroup options"
+            className="size-12 flex items-center justify-center rounded-full active:bg-gray-100 transition-colors"
+          >
+            <MoreVertical className="size-6 text-[#484848]" strokeWidth={2} />
+          </button>
+          {showMenu && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
+              <div className="absolute right-0 top-12 z-50 bg-white rounded-[8px] shadow-[0px_4px_8px_3px_rgba(0,0,0,0.15)] py-1 min-w-[180px]">
+                <button
+                  onClick={() => { setShowMenu(false); setShowDeleteConfirm(true); }}
+                  className="w-full h-11 flex items-center px-4 active:bg-gray-50 transition-colors text-left whitespace-nowrap"
+                >
+                  <span className="font-['Noto_Sans',sans-serif] font-normal text-[16px] text-black leading-6" style={ns}>Delete subgroup</span>
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Scrollable body */}
@@ -7170,6 +7235,11 @@ function PrototypeApp() {
               onMonthlyGoal={() => { setTodayGoalOverride(null); goTo("monthlyGoal"); }}
               onAddMember={() => setShowAddSubgroupMember(true)}
               onCaptainSaved={(name) => { setSelectedSubgroup(prev => prev ? { ...prev, captain: name } : prev); showSnackbar("Captain updated"); }}
+              onDelete={() => {
+                setSubgroups(prev => prev.filter(s => s.letter !== selectedSubgroup.letter));
+                showSnackbar("Subgroup deleted");
+                goBack();
+              }}
             />
           </motion.div>
         )}
