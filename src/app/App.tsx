@@ -2729,7 +2729,17 @@ const EXAM_CUSTOM_CATEGORIES: ExamCustomCategory[] = [
       { id: "special-bcs-education-34", label: "৪৯তম বিসিএস — শিক্ষা [২২১]", checked: true },
     ],
   },
-  { id: "special-bcs-health", label: "স্পেশাল বিসিএস (স্বাস্থ্য)", Icon: Stethoscope, expanded: false, items: [] },
+  {
+    id: "special-bcs-health", label: "স্পেশাল বিসিএস (স্বাস্থ্য)", Icon: Stethoscope, expanded: false,
+    items: [
+      { id: "special-bcs-health-1", label: "স্পেশাল বিসিএস [স্বাস্থ্য] — সাধারণ অংশ [২০২৬]", checked: true },
+      { id: "special-bcs-health-2", label: "স্পেশাল বিসিএস [স্বাস্থ্য] — মেডিকেল অংশ [২০২৬]", checked: true },
+      { id: "special-bcs-health-3", label: "স্পেশাল বিসিএস [স্বাস্থ্য] — মডেল টেস্ট [২০২৬]", checked: true },
+      { id: "special-bcs-health-4", label: "স্পেশাল বিসিএস [স্বাস্থ্য] — ডেন্টাল অংশ [২০২৬]", checked: true },
+      { id: "special-bcs-health-5", label: "স্পেশাল বিসিএস [স্বাস্থ্য] — ডেন্টাল মডেল টেস্ট [২০২৬]", checked: true },
+      { id: "special-bcs-health-6", label: "৩৯, ৪২ ও ৪৮তম স্পেশাল বিসিএস [স্বাস্থ্য]", checked: true },
+    ],
+  },
   { id: "nurse-midwifery", label: "নার্স ও মিডওয়াইফারি", Icon: User, expanded: false, items: [] },
 ];
 
