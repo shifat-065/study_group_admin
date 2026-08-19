@@ -2427,9 +2427,9 @@ function ZoneThresholdSlider({ mid, high, onChange }: { mid: number; high: numbe
     <div className="flex flex-col gap-1 px-4">
       <div ref={trackRef} className="relative h-8 flex items-center touch-none">
         <div className="absolute inset-x-0 h-2 rounded-full overflow-hidden flex">
-          <div className="h-full" style={{ width: `${mid}%`, backgroundColor: ZONES.red.bg }} />
-          <div className="h-full" style={{ width: `${high - mid}%`, backgroundColor: ZONES.yellow.bg }} />
-          <div className="h-full" style={{ width: `${100 - high}%`, backgroundColor: ZONES.green.bg }} />
+          <div className="h-full" style={{ width: `${mid}%`, backgroundColor: ZONES.red.border }} />
+          <div className="h-full" style={{ width: `${high - mid}%`, backgroundColor: ZONES.yellow.border }} />
+          <div className="h-full" style={{ width: `${100 - high}%`, backgroundColor: ZONES.green.border }} />
         </div>
         {ticks.map(t => (
           <div
