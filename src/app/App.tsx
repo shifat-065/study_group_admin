@@ -2562,14 +2562,6 @@ const EXAM_CUSTOM_CATEGORIES: ExamCustomCategory[] = [
     id: "weekly", label: "সাপ্তাহিক পরীক্ষা", Icon: Gift, expanded: true,
     items: MANDATORY_EXAMS.slice(0, 1).map((exam, i) => ({ id: `weekly-${i + 1}`, label: exam.name, checked: true })),
   },
-  {
-    id: "daily", label: "দৈনিক পরীক্ষা", Icon: Wallet, expanded: true,
-    items: MANDATORY_EXAMS.slice(1, 6).map((exam, i) => ({ id: `daily-${i + 1}`, label: exam.name, checked: true })),
-  },
-  {
-    id: "monthly", label: "মাসিক পরীক্ষা", Icon: Landmark, expanded: false,
-    items: MANDATORY_EXAMS.slice(6, 7).map((exam, i) => ({ id: `monthly-${i + 1}`, label: exam.name, checked: true })),
-  },
   { id: "bcs-51", label: "৫১তম বিসিএস প্রস্তুতি", Icon: Landmark, expanded: false, items: [] },
   { id: "bcs-newcomers", label: "নতুনদের বিসিএস প্রস্তুতি", Icon: Banknote, expanded: false, items: [] },
   { id: "prelim-written", label: "প্রিলি ও লিখিত সমন্বিত প্রস্তুতি", Icon: NotebookPen, expanded: false, items: [] },
