@@ -2558,7 +2558,21 @@ interface ExamCustomCategory { id: string; label: string; Icon: LucideIcon; expa
 // grouped by real cadence — 1 weekly, 5 daily, 1 monthly — instead of a separately hand-typed
 // 5-item subset that didn't cover the full list.
 const EXAM_CUSTOM_CATEGORIES: ExamCustomCategory[] = [
-  { id: "bcs-51", label: "৫১তম বিসিএস প্রস্তুতি", Icon: Landmark, expanded: false, items: [] },
+  {
+    id: "bcs-51", label: "৫১তম বিসিএস প্রস্তুতি", Icon: Landmark, expanded: false,
+    items: [
+      { id: "bcs-51-1", label: "ফ্রি সাপ্তাহিক মডেল টেস্ট", checked: true },
+      { id: "bcs-51-2", label: "ডেইলি কুইজ [১৪০ দিনের রুটিনের অংশ]", checked: true },
+      { id: "bcs-51-3", label: "১৪০ দিনে ৫১তম বিসিএস প্রস্তুতি", checked: true },
+      { id: "bcs-51-4", label: "১০০ দিনে বিসিএস প্রস্তুতি [বিষয়ভিত্তিক]", checked: true },
+      { id: "bcs-51-5", label: "গুরুত্বপূর্ণ টপিকের উপর পরীক্ষা - ১৩৫ মার্কস্ কাভার", checked: true },
+      { id: "bcs-51-6", label: "৫১তম বিসিএস ফাইনাল মডেল টেস্ট ও রিভিশন", checked: true },
+      { id: "bcs-51-7", label: "৫০ দিনে ৫০তম বিসিএস প্রস্তুতি [সমন্বিত] - Archived", checked: true },
+      { id: "bcs-51-8", label: "৪৫ দিনে ৫০তম বিসিএস প্রস্তুতি [বিষয়ভিত্তিক] - Archived", checked: true },
+      { id: "bcs-51-9", label: "২০ দিনে ৪৭তম বিসিএস রিভিশন - Archived", checked: true },
+      { id: "bcs-51-10", label: "৪০ দিনে ৪৭তম বিসিএস প্রস্তুতি - Archived", checked: true },
+    ],
+  },
   { id: "bcs-newcomers", label: "নতুনদের বিসিএস প্রস্তুতি", Icon: Banknote, expanded: false, items: [] },
   { id: "prelim-written", label: "প্রিলি ও লিখিত সমন্বিত প্রস্তুতি", Icon: NotebookPen, expanded: false, items: [] },
   { id: "subject-care", label: "সাবজেক্ট কেয়ার", Icon: BookOpen, expanded: false, items: [] },
