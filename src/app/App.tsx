@@ -2740,7 +2740,12 @@ const EXAM_CUSTOM_CATEGORIES: ExamCustomCategory[] = [
       { id: "special-bcs-health-6", label: "৩৯, ৪২ ও ৪৮তম স্পেশাল বিসিএস [স্বাস্থ্য]", checked: true },
     ],
   },
-  { id: "nurse-midwifery", label: "নার্স ও মিডওয়াইফারি", Icon: User, expanded: false, items: [] },
+  {
+    id: "nurse-midwifery", label: "নার্স ও মিডওয়াইফারি", Icon: User, expanded: false,
+    items: [
+      { id: "nurse-midwifery-1", label: "সিনিয়র স্টাফ নার্স ও মিডওয়াইফারি নিয়োগ", checked: true },
+    ],
+  },
 ];
 
 function AdminExamCustomisationScreen({ onBack, onSave }: { onBack: () => void; onSave: () => void }) {
