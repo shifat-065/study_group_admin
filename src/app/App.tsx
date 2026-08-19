@@ -5853,8 +5853,7 @@ function SubgroupListScreen({ onBack, group, subgroups, onDetail, onCreateNew }:
   const [sortBy, setSortBy] = useState<SubgroupSort>("alphabetical");
   const [sorting, setSorting] = useState(false);
 
-  const myGroup = subgroups.find(s => s.isMyGroup)!;
-  const otherGroups = subgroups.filter(s => !s.isMyGroup).slice().sort((a, b) => {
+  const sortedGroups = subgroups.slice().sort((a, b) => {
     if (sortBy === "attendance") return b.goalPct - a.goalPct;
     if (sortBy === "memberCount") return b.members - a.members;
     return a.letter.localeCompare(b.letter);
@@ -5897,24 +5896,6 @@ function SubgroupListScreen({ onBack, group, subgroups, onDetail, onCreateNew }:
             </span>
           </div>
         </div>
-        {/* Goal progress */}
-        <div className="flex flex-col gap-2 w-full">
-          <div className="flex items-center justify-between w-full">
-            <span
-              className="font-['Noto_Sans',sans-serif] font-normal text-[14px] text-black leading-[20px]"
-              style={ns}
-            >
-              {"Today's goal"}
-            </span>
-            <span
-              className="font-['Noto_Sans',sans-serif] font-normal text-[14px] text-black leading-[20px]"
-              style={ns}
-            >
-              {sg.goalPct.toFixed(1)}%
-            </span>
-          </div>
-          <SubgroupProgressBar pct={sg.goalPct} />
-        </div>
       </div>
     );
   }
@@ -5952,32 +5933,10 @@ function SubgroupListScreen({ onBack, group, subgroups, onDetail, onCreateNew }:
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="flex flex-col gap-6 px-4 pt-4 pb-8">
-          {/* My subgroup */}
-          <div className="flex flex-col gap-3">
-            <span
-              className="font-['Noto_Sans',sans-serif] font-medium text-[16px] text-black tracking-[0.15px] leading-[24px]"
-              style={ns}
-            >
-              My subgroup
-            </span>
-            <SubgroupCard sg={myGroup} />
-          </div>
-
-          {/* Other subgroups */}
-          <div className="flex flex-col gap-3">
-            <span
-              className="font-['Noto_Sans',sans-serif] font-medium text-[16px] text-black tracking-[0.15px] leading-[24px]"
-              style={ns}
-            >
-              Other subgroups
-            </span>
-            <div className="flex flex-col gap-3">
-              {otherGroups.map(sg => (
-                <SubgroupCard key={sg.letter} sg={sg} />
-              ))}
-            </div>
-          </div>
+        <div className="flex flex-col gap-3 px-4 pt-4 pb-8">
+          {sortedGroups.map(sg => (
+            <SubgroupCard key={sg.letter} sg={sg} />
+          ))}
         </div>
       </div>
 
