@@ -2580,7 +2580,12 @@ const EXAM_CUSTOM_CATEGORIES: ExamCustomCategory[] = [
       { id: "bcs-newcomers-2", label: "নতুনদের বিসিএস প্রস্তুতি - ২০০ দিনে পুরো সিলেবাস", checked: true },
     ],
   },
-  { id: "prelim-written", label: "প্রিলি ও লিখিত সমন্বিত প্রস্তুতি", Icon: NotebookPen, expanded: false, items: [] },
+  {
+    id: "prelim-written", label: "প্রিলি ও লিখিত সমন্বিত প্রস্তুতি", Icon: NotebookPen, expanded: false,
+    items: [
+      { id: "prelim-written-1", label: "বিসিএস প্রিলি ও লিখিত সমন্বিত প্রস্তুতি", checked: true },
+    ],
+  },
   { id: "subject-care", label: "সাবজেক্ট কেয়ার", Icon: BookOpen, expanded: false, items: [] },
   { id: "job-solution", label: "জব সল্যুশন", Icon: Briefcase, expanded: false, items: [] },
   { id: "bank-job-prep", label: "ব্যাংক নিয়োগ প্রস্তুতি", Icon: Camera, expanded: false, items: [] },
