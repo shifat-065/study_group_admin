@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { imgCalendarMonth, imgEmojiEvents, imgEmojiEvents1 } from "@/imports/MobileStudyGroupStudentGroupRank/svg-5p890";
 import svgRankPaths from "@/imports/MobileStudyGroupStudentGroupRank/svg-npjyrr8ymv";
 import { motion, AnimatePresence } from "motion/react";
@@ -4124,7 +4124,7 @@ function GroupRankContent({ monthIndex, selectedMonth }: { monthIndex: number; s
           {/* Stats */}
           <div className="flex gap-4">
             {[
-              { val: String(MEMBER_LIST.length), label: "Members" },
+              { val: String(INITIAL_MEMBER_LIST.length), label: "Members" },
               { val: `${d.attendance}%`, label: "Attendance" },
               { val: String(d.exams), label: "Exams" },
               { val: `${d.rating}%`, label: "Rating" },
@@ -4334,7 +4334,9 @@ interface Member {
   subgroup: string;
 }
 
-const MEMBER_LIST: Member[] = [
+// Baseline roster — PrototypeApp lifts this into `memberList` state so "Add new member"
+// can actually append a row and every total-member-count display stays in sync.
+const INITIAL_MEMBER_LIST: Member[] = [
   { name: "Atiqul Haque", pct: 88.0, chip: "green", memberId: "WS230", since: "23 Mar 2023", rating: "B", level: 1, exams: 200, preparingFor: "BCS", gender: "Male", birthday: "24 Dec", majorSubject: "English", institute: "University of Dhaka", district: "Dhaka", subgroup: "A" },
   { name: "Shajenur khatun", pct: 88.0, chip: "green", memberId: "WS229", since: "12 Feb 2023", rating: "B", level: 2, exams: 180, preparingFor: "Bank", gender: "Female", birthday: "3 Apr", majorSubject: "Accounting", institute: "Jahangirnagar University", district: "Dhaka", subgroup: "A" },
   { name: "Anik Mahmud", pct: 29.0, chip: "red", memberId: "WS228", since: "5 Jan 2023", rating: "C", level: 1, exams: 60, preparingFor: "NTRCA", gender: "Male", birthday: "19 Aug", majorSubject: "Physics", institute: "Chittagong University", district: "Chattogram", subgroup: "A" },
@@ -4562,9 +4564,9 @@ function zoneBarColor(pct: number) {
   return pct >= 76 ? "#6fcf7e" : pct >= 41 ? "#ffcb61" : "#f04d30";
 }
 
-function AdminMembersHubScreen({ group, onBack, onTotalMembers, onSelectZone, onAddMember }: { group: Group; onBack: () => void; onTotalMembers: () => void; onSelectZone: (zone: Zone) => void; onAddMember: () => void }) {
+function AdminMembersHubScreen({ group, memberList, onBack, onTotalMembers, onSelectZone, onAddMember }: { group: Group; memberList: Member[]; onBack: () => void; onTotalMembers: () => void; onSelectZone: (zone: Zone) => void; onAddMember: () => void }) {
   const zoneCounts = (Object.keys(ZONES) as Zone[]).reduce((acc, zone) => {
-    acc[zone] = MEMBER_LIST.filter(m => ZONES[zone].match(m)).length;
+    acc[zone] = memberList.filter(m => ZONES[zone].match(m)).length;
     return acc;
   }, {} as Record<Zone, number>);
 
@@ -4906,7 +4908,7 @@ function SortBottomSheet({ value, onSelect, onClose, options = SORT_OPTIONS }: {
   );
 }
 
-function GroupMembersScreen({ onBack, group, zone, isAdmin, title, hideCountRow, subgroupLetter, targetPct, takingNewMembers = true }: { onBack: () => void; group: Group; zone?: Zone; isAdmin?: boolean; title?: string; hideCountRow?: boolean; subgroupLetter?: string; targetPct?: number; takingNewMembers?: boolean }) {
+function GroupMembersScreen({ onBack, group, memberList, zone, isAdmin, title, hideCountRow, subgroupLetter, targetPct, takingNewMembers = true }: { onBack: () => void; group: Group; memberList: Member[]; zone?: Zone; isAdmin?: boolean; title?: string; hideCountRow?: boolean; subgroupLetter?: string; targetPct?: number; takingNewMembers?: boolean }) {
   const ns = { fontVariationSettings: '"CTGR" 0, "wdth" 100' };
   const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState("");
@@ -4918,7 +4920,7 @@ function GroupMembersScreen({ onBack, group, zone, isAdmin, title, hideCountRow,
   const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
 
   const zoneConfig = zone ? ZONES[zone] : null;
-  const scoped = MEMBER_LIST.filter(m => !removedIds.has(m.memberId))
+  const scoped = memberList.filter(m => !removedIds.has(m.memberId))
     .filter(m => !subgroupLetter || m.subgroup === subgroupLetter);
   // When reached from a subgroup's Today's/Monthly Goal, each member's shown attendance
   // is scaled so the scoped group's average matches that goal's own percentage (e.g.
@@ -5093,21 +5095,21 @@ interface ExamListItem {
 }
 
 const EXAM_LIST: ExamListItem[] = [
-  { name: "ফ্রি সাপ্তাহিক মডেল টেস্ট", attended: 8, total: MEMBER_LIST.length },
-  { name: "গুরুত্বপূর্ণ টপিকের উপর পরীক্ষা", attended: 10, total: MEMBER_LIST.length },
-  { name: "২০২২ সাল ভিত্তিক সিনিয়র অফিসার নিয়োগ প্রস্তুতি", attended: 7, total: MEMBER_LIST.length },
-  { name: "মাসিক মডেল টেস্ট [পরিপূর্ণ সিলেবাস]", attended: 4, total: MEMBER_LIST.length },
+  { name: "ফ্রি সাপ্তাহিক মডেল টেস্ট", attended: 8, total: INITIAL_MEMBER_LIST.length },
+  { name: "গুরুত্বপূর্ণ টপিকের উপর পরীক্ষা", attended: 10, total: INITIAL_MEMBER_LIST.length },
+  { name: "২০২২ সাল ভিত্তিক সিনিয়র অফিসার নিয়োগ প্রস্তুতি", attended: 7, total: INITIAL_MEMBER_LIST.length },
+  { name: "মাসিক মডেল টেস্ট [পরিপূর্ণ সিলেবাস]", attended: 4, total: INITIAL_MEMBER_LIST.length },
 ];
 
 // Monthly Goal shows the full mandatory-exam list (Today's Goal only shows a trimmed 4).
 const MONTHLY_EXAM_LIST: ExamListItem[] = [
-  { name: "ফ্রি সাপ্তাহিক মডেল টেস্ট", attended: 8, total: MEMBER_LIST.length },
-  { name: "১৪০ দিনে ৪৭তম বিসিএস প্রস্তুতি", attended: 6, total: MEMBER_LIST.length },
-  { name: "গুরুত্বপূর্ণ টপিকের উপর পরীক্ষা", attended: 10, total: MEMBER_LIST.length },
-  { name: "ব্যাংক নিয়োগ প্রস্তুতি - লং কোর্স", attended: 5, total: MEMBER_LIST.length },
-  { name: "২০২২ সাল ভিত্তিক সিনিয়র অফিসার নিয়োগ প্রস্তুতি", attended: 7, total: MEMBER_LIST.length },
-  { name: "ব্যাংক ডেইলি কুইজ", attended: 9, total: MEMBER_LIST.length },
-  { name: "মাসিক মডেল টেস্ট [পরিপূর্ণ সিলেবাস]", attended: 4, total: MEMBER_LIST.length },
+  { name: "ফ্রি সাপ্তাহিক মডেল টেস্ট", attended: 8, total: INITIAL_MEMBER_LIST.length },
+  { name: "১৪০ দিনে ৪৭তম বিসিএস প্রস্তুতি", attended: 6, total: INITIAL_MEMBER_LIST.length },
+  { name: "গুরুত্বপূর্ণ টপিকের উপর পরীক্ষা", attended: 10, total: INITIAL_MEMBER_LIST.length },
+  { name: "ব্যাংক নিয়োগ প্রস্তুতি - লং কোর্স", attended: 5, total: INITIAL_MEMBER_LIST.length },
+  { name: "২০২২ সাল ভিত্তিক সিনিয়র অফিসার নিয়োগ প্রস্তুতি", attended: 7, total: INITIAL_MEMBER_LIST.length },
+  { name: "ব্যাংক ডেইলি কুইজ", attended: 9, total: INITIAL_MEMBER_LIST.length },
+  { name: "মাসিক মডেল টেস্ট [পরিপূর্ণ সিলেবাস]", attended: 4, total: INITIAL_MEMBER_LIST.length },
 ];
 
 // Real monthly occurrence count per exam in MONTHLY_EXAM_LIST (same order): the weekly exam
@@ -5575,7 +5577,7 @@ function SubgroupDetailScreen({ onBack, sg, groupName, onTodayGoal, onMonthlyGoa
   const [showMenu, setShowMenu] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const sortedMembers = MEMBER_LIST.filter(m => m.subgroup === sg.letter && !removedIds.has(m.memberId)).sort((a, b) => (
+  const sortedMembers = INITIAL_MEMBER_LIST.filter(m => m.subgroup === sg.letter && !removedIds.has(m.memberId)).sort((a, b) => (
     sortBy === "alphabetical" ? a.name.localeCompare(b.name) : b.pct - a.pct
   ));
 
@@ -6024,7 +6026,7 @@ interface SubgroupCandidate { name: string; pct: number; assignedTo: string | nu
 
 // Full roster (used by the captain picker, which needs to resolve any existing captain by
 // name regardless of subgroup).
-const CREATE_SUBGROUP_CANDIDATES: SubgroupCandidate[] = MEMBER_LIST.map(m => ({
+const CREATE_SUBGROUP_CANDIDATES: SubgroupCandidate[] = INITIAL_MEMBER_LIST.map(m => ({
   name: m.name,
   pct: m.pct,
   assignedTo: m.subgroup || null,
@@ -6394,7 +6396,7 @@ function ExamAttendanceMembersScreen({ examName, attended, onBack, title = "Exam
 
   // Reached from a specific subgroup's Today's Goal, only that subgroup's members should
   // appear here — otherwise (the admin's own group-level entry) it's the whole group.
-  const pool = subgroupLetter ? MEMBER_LIST.filter(m => m.subgroup === subgroupLetter) : MEMBER_LIST;
+  const pool = subgroupLetter ? INITIAL_MEMBER_LIST.filter(m => m.subgroup === subgroupLetter) : INITIAL_MEMBER_LIST;
 
   // Deterministically pick which members "attended" this specific exam, so the header
   // count and the per-row Attended/Not attended badges always agree, and different exams
@@ -6559,7 +6561,7 @@ function MonthlyGoalExamDetailScreen({ examName, group, sg, override, examTotals
   const monthRemaining = Math.max(monthTotal - monthAttended, 0);
   const monthBarPct = goalPct;
 
-  const scopedMembers = MEMBER_LIST.filter(m => !removedIds.has(m.memberId) && (override || m.subgroup === sg.letter));
+  const scopedMembers = INITIAL_MEMBER_LIST.filter(m => !removedIds.has(m.memberId) && (override || m.subgroup === sg.letter));
   // Scale each member's shown attendance so the scoped group's average matches this exam's
   // own percentage, instead of the members' unrelated raw overall pct.
   const remaining = (() => {
@@ -6743,14 +6745,18 @@ function MonthlyGoalExamDetailScreen({ examName, group, sg, override, examTotals
 
 function PrototypeApp() {
   const [stack, setStack] = useState<Screen[]>(["adminHome"]);
+  // The real member roster, lifted into state so "Add new member" can actually append a row
+  // and every total-member-count display (home chip, Total members list, zone counts) stays
+  // in sync instead of reading a frozen module-level array.
+  const [memberList, setMemberList] = useState<Member[]>(INITIAL_MEMBER_LIST);
   // GROUPS[0] ("The Winner") is the admin's own real group — its avgAttendance and members
-  // count are overridden with MEMBER_LIST's real values, not the stored fictional placeholders,
+  // count are derived from memberList's real values, not the stored fictional placeholders,
   // so they can't drift out of sync with the real roster (which includes unassigned members).
-  const [selectedGroup, setSelectedGroup] = useState<Group | null>(() => ({
+  const selectedGroup = useMemo<Group | null>(() => ({
     ...GROUPS[0],
-    avgAttendance: MEMBER_LIST.reduce((s, m) => s + m.pct, 0) / MEMBER_LIST.length,
-    members: MEMBER_LIST.length,
-  }));
+    avgAttendance: memberList.reduce((s, m) => s + m.pct, 0) / memberList.length,
+    members: memberList.length,
+  }), [memberList]);
   const [selectedSubgroup, setSelectedSubgroup] = useState<SubgroupData | null>(null);
   const [selectedExamName, setSelectedExamName] = useState<string | null>(null);
   const [selectedExamTotals, setSelectedExamTotals] = useState<{ total: number; attended: number } | null>(null);
@@ -6768,7 +6774,7 @@ function PrototypeApp() {
   // Admin-editable "Monthly goal (exams)" target from Group Settings — defaults to the real
   // computed monthly capacity (64 members × 120 slots), but the saved value actually drives
   // the group-level Monthly Goal card/page once changed.
-  const [monthlyGoalTarget, setMonthlyGoalTarget] = useState(MEMBER_LIST.length * EXAM_LIST.length * 30);
+  const [monthlyGoalTarget, setMonthlyGoalTarget] = useState(INITIAL_MEMBER_LIST.length * EXAM_LIST.length * 30);
   // Group Settings' "Taking new members" toggle — when off, the "Open to Join" badge
   // switches to "Not accepting members" everywhere it's shown across the admin screens.
   const [takingNewMembers, setTakingNewMembers] = useState(true);
@@ -6960,6 +6966,7 @@ function PrototypeApp() {
           >
             <AdminMembersHubScreen
               group={selectedGroup}
+              memberList={memberList}
               onBack={goBack}
               onTotalMembers={() => { setMembersAdminMode(true); goTo("members"); }}
               onSelectZone={(zone) => { setSelectedZone(zone); goTo("adminZoneMembers"); }}
@@ -6979,7 +6986,7 @@ function PrototypeApp() {
             transition={slideTrans}
             className="absolute inset-0"
           >
-            <GroupMembersScreen group={selectedGroup} zone={selectedZone} isAdmin onBack={goBack} />
+            <GroupMembersScreen group={selectedGroup} memberList={memberList} zone={selectedZone} isAdmin onBack={goBack} />
           </motion.div>
         )}
 
@@ -6994,7 +7001,7 @@ function PrototypeApp() {
             transition={slideTrans}
             className="absolute inset-0"
           >
-            <GroupMembersScreen group={selectedGroup} isAdmin title="Member attendance" hideCountRow subgroupLetter={memberAttendanceSubgroupLetter ?? undefined} targetPct={memberAttendanceTargetPct ?? undefined} onBack={goBack} />
+            <GroupMembersScreen group={selectedGroup} memberList={memberList} isAdmin title="Member attendance" hideCountRow subgroupLetter={memberAttendanceSubgroupLetter ?? undefined} targetPct={memberAttendanceTargetPct ?? undefined} onBack={goBack} />
           </motion.div>
         )}
 
@@ -7220,7 +7227,7 @@ function PrototypeApp() {
             transition={slideTrans}
             className="absolute inset-0"
           >
-            <GroupMembersScreen group={selectedGroup} isAdmin={membersAdminMode} takingNewMembers={takingNewMembers} onBack={goBack} />
+            <GroupMembersScreen group={selectedGroup} memberList={memberList} isAdmin={membersAdminMode} takingNewMembers={takingNewMembers} onBack={goBack} />
           </motion.div>
         )}
 
@@ -7394,7 +7401,14 @@ function PrototypeApp() {
         {showAddMember && (
           <AddMemberDialog
             onCancel={() => setShowAddMember(false)}
-            onAdd={() => { setShowAddMember(false); showSnackbar("Member added"); }}
+            onAdd={(id, phone) => {
+              setMemberList(prev => [
+                { name: `New Member (${id})`, pct: 0, chip: "red", memberId: id, since: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }), rating: "C", level: 1, exams: 0, preparingFor: "", gender: "", birthday: "", majorSubject: "", institute: "", district: "", subgroup: "" },
+                ...prev,
+              ]);
+              setShowAddMember(false);
+              showSnackbar("Member added");
+            }}
           />
         )}
       </AnimatePresence>
