@@ -2315,7 +2315,7 @@ const ADMIN_GROUP_RULES_BODY_TEXT = `- নিয়মিত পরীক্ষ�
 শুভকামনায়,
 Live MCQ Team.`;
 
-function AdminGroupRulesViewScreen({ group, onBack }: { group: Group; onBack: () => void }) {
+function AdminGroupRulesViewScreen({ group, onBack, takingNewMembers }: { group: Group; onBack: () => void; takingNewMembers: boolean }) {
   const zoneRows = [
     { color: ZONES.red.border, label: "Red Zone Attendance", value: "10%" },
     { color: ZONES.yellow.border, label: "Yellow Zone Attendance", value: "20%" },
@@ -2330,8 +2330,8 @@ function AdminGroupRulesViewScreen({ group, onBack }: { group: Group; onBack: ()
         <div className="border border-[#e3e3e3] rounded-[12px] p-3 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <span className="font-['Noto_Sans',sans-serif] font-medium text-[14px] text-black leading-5">Status</span>
-            <div className="bg-[#0c5fff] rounded-[4px] px-2 h-5 flex items-center shrink-0">
-              <span className="font-['Noto_Sans',sans-serif] font-medium text-[10px] text-white leading-4">Open to Join</span>
+            <div className={clsx("rounded-[4px] px-2 h-5 flex items-center shrink-0", takingNewMembers ? "bg-[#0c5fff]" : "bg-[#787878]")}>
+              <span className="font-['Noto_Sans',sans-serif] font-medium text-[10px] text-white leading-4">{takingNewMembers ? "Open to Join" : "Not accepting members"}</span>
             </div>
           </div>
           <div className="h-px bg-[#e3e3e3]" />
@@ -2380,7 +2380,7 @@ function AdminGroupRulesViewScreen({ group, onBack }: { group: Group; onBack: ()
 function ToggleSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   return (
     <button
-      onClick={onToggle}
+      onClick={e => { e.stopPropagation(); onToggle(); }}
       className={clsx("relative h-[32px] w-[52px] rounded-[100px] transition-colors duration-200 shrink-0", on ? "bg-[#1441cc]" : "bg-[#787878]")}
     >
       <motion.div
@@ -2474,8 +2474,8 @@ function ZoneThresholdLegendRow({ color, label, range }: { color: string; label:
   );
 }
 
-function AdminGroupSettingsScreen({ onBack, onSave, group, monthlyGoalTarget }: { onBack: () => void; onSave: (monthlyGoal: number) => void; group: Group; monthlyGoalTarget: number }) {
-  const [takingNewMembers, setTakingNewMembers] = useState(false);
+function AdminGroupSettingsScreen({ onBack, onSave, group, monthlyGoalTarget, takingNewMembers: initialTakingNewMembers }: { onBack: () => void; onSave: (monthlyGoal: number, takingNewMembers: boolean) => void; group: Group; monthlyGoalTarget: number; takingNewMembers: boolean }) {
+  const [takingNewMembers, setTakingNewMembers] = useState(initialTakingNewMembers);
   // Defaults trace to the real group data instead of independent placeholder numbers —
   // member limit is the group's real maxMembers, subgroup limit matches MAX_SUBGROUP_MEMBERS
   // (the same cap CreateSubgroupScreen enforces), and "Monthly goal (exams)" starts at the
@@ -2496,7 +2496,13 @@ function AdminGroupSettingsScreen({ onBack, onSave, group, monthlyGoalTarget }: 
 
       <div className="flex-1 overflow-y-auto flex flex-col gap-6 pt-2">
         <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-4 px-4 py-2 min-h-[72px]">
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => setTakingNewMembers(v => !v)}
+            onKeyDown={e => { if (e.key === "Enter" || e.key === " ") setTakingNewMembers(v => !v); }}
+            className="flex items-center gap-4 px-4 py-2 min-h-[72px] cursor-pointer active:bg-gray-50 transition-colors"
+          >
             <ToggleSwitch on={takingNewMembers} onToggle={() => setTakingNewMembers(v => !v)} />
             <div className="flex-1 min-w-0 flex flex-col justify-center">
               <p className="font-['Noto_Sans',sans-serif] font-medium text-[16px] text-black leading-6">Taking new members</p>
@@ -2532,7 +2538,7 @@ function AdminGroupSettingsScreen({ onBack, onSave, group, monthlyGoalTarget }: 
 
       <div className="shrink-0 p-3">
         <button
-          onClick={() => onSave(Number(monthlyGoal) || monthlyGoalTarget)}
+          onClick={() => onSave(Number(monthlyGoal) || monthlyGoalTarget, takingNewMembers)}
           className="w-full h-14 bg-[#1441cc] rounded-full flex items-center justify-center active:opacity-90 transition-opacity"
         >
           <span className="font-['Noto_Sans',sans-serif] font-medium text-[16px] text-white tracking-[0.15px]">Save</span>
@@ -3180,7 +3186,7 @@ function GroupPointsFormulaSheet({ onClose }: { onClose: () => void }) {
   );
 }
 
-function AdminMyGroupScreen({ group, onBack }: { group: Group; onBack: () => void }) {
+function AdminMyGroupScreen({ group, onBack, takingNewMembers }: { group: Group; onBack: () => void; takingNewMembers: boolean }) {
   const ns = { fontVariationSettings: '"CTGR" 0, "wdth" 100' };
   const [showAdminDetails, setShowAdminDetails] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -3250,8 +3256,8 @@ function AdminMyGroupScreen({ group, onBack }: { group: Group; onBack: () => voi
             <div className="flex-1 min-w-0 flex flex-col gap-2">
               <div className="flex items-center gap-2 h-6">
                 <span className="font-['Noto_Sans',sans-serif] font-medium text-[16px] text-black leading-6 truncate">{group.name}</span>
-                <div className="bg-[#0c5fff] rounded-[4px] px-2 h-5 flex items-center shrink-0 ml-auto">
-                  <span className="font-['Noto_Sans',sans-serif] font-medium text-[10px] text-white leading-4" style={ns}>Open to Join</span>
+                <div className={clsx("rounded-[4px] px-2 h-5 flex items-center shrink-0 ml-auto", takingNewMembers ? "bg-[#0c5fff]" : "bg-[#787878]")}>
+                  <span className="font-['Noto_Sans',sans-serif] font-medium text-[10px] text-white leading-4" style={ns}>{takingNewMembers ? "Open to Join" : "Not accepting members"}</span>
                 </div>
               </div>
               <div className="flex flex-col gap-1">
@@ -4868,7 +4874,7 @@ function SortBottomSheet({ value, onSelect, onClose, options = SORT_OPTIONS }: {
   );
 }
 
-function GroupMembersScreen({ onBack, group, zone, isAdmin, title, hideCountRow, subgroupLetter, targetPct }: { onBack: () => void; group: Group; zone?: Zone; isAdmin?: boolean; title?: string; hideCountRow?: boolean; subgroupLetter?: string; targetPct?: number }) {
+function GroupMembersScreen({ onBack, group, zone, isAdmin, title, hideCountRow, subgroupLetter, targetPct, takingNewMembers = true }: { onBack: () => void; group: Group; zone?: Zone; isAdmin?: boolean; title?: string; hideCountRow?: boolean; subgroupLetter?: string; targetPct?: number; takingNewMembers?: boolean }) {
   const ns = { fontVariationSettings: '"CTGR" 0, "wdth" 100' };
   const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState("");
@@ -4969,9 +4975,9 @@ function GroupMembersScreen({ onBack, group, zone, isAdmin, title, hideCountRow,
             <span className="font-['Noto_Sans',sans-serif] font-medium text-[14px] text-black tracking-[0.1px] leading-[20px]" style={ns}>
               Total members ({group.members}/100)
             </span>
-            <div className="bg-[#0c5fff] rounded-[4px] px-2 h-5 flex items-center shrink-0">
+            <div className={clsx("rounded-[4px] px-2 h-5 flex items-center shrink-0", takingNewMembers ? "bg-[#0c5fff]" : "bg-[#787878]")}>
               <span className="font-['Noto_Sans',sans-serif] font-medium text-[10px] text-white leading-[16px]" style={ns}>
-                Open to Join
+                {takingNewMembers ? "Open to Join" : "Not accepting members"}
               </span>
             </div>
           </>
@@ -6746,6 +6752,9 @@ function PrototypeApp() {
   // computed monthly capacity (64 members × 120 slots), but the saved value actually drives
   // the group-level Monthly Goal card/page once changed.
   const [monthlyGoalTarget, setMonthlyGoalTarget] = useState(MEMBER_LIST.length * EXAM_LIST.length * 30);
+  // Group Settings' "Taking new members" toggle — when off, the "Open to Join" badge
+  // switches to "Not accepting members" everywhere it's shown across the admin screens.
+  const [takingNewMembers, setTakingNewMembers] = useState(true);
   const [selectedExamLive, setSelectedExamLive] = useState(false);
   const [selectedQuickLink, setSelectedQuickLink] = useState<QuickLink | null>(null);
   const [selectedExamList, setSelectedExamList] = useState<Array<{ name: string; isLive: boolean }>>(MANDATORY_EXAMS);
@@ -6870,7 +6879,7 @@ function PrototypeApp() {
             transition={slideTrans}
             className="absolute inset-0"
           >
-            <AdminGroupRulesViewScreen group={selectedGroup} onBack={goBack} />
+            <AdminGroupRulesViewScreen group={selectedGroup} takingNewMembers={takingNewMembers} onBack={goBack} />
           </motion.div>
         )}
 
@@ -6914,7 +6923,7 @@ function PrototypeApp() {
             transition={slideTrans}
             className="absolute inset-0"
           >
-            <AdminMyGroupScreen group={selectedGroup} onBack={goBack} />
+            <AdminMyGroupScreen group={selectedGroup} takingNewMembers={takingNewMembers} onBack={goBack} />
           </motion.div>
         )}
 
@@ -7042,9 +7051,11 @@ function PrototypeApp() {
             <AdminGroupSettingsScreen
               group={selectedGroup}
               monthlyGoalTarget={monthlyGoalTarget}
+              takingNewMembers={takingNewMembers}
               onBack={goBack}
-              onSave={(newMonthlyGoal) => {
+              onSave={(newMonthlyGoal, newTakingNewMembers) => {
                 setMonthlyGoalTarget(newMonthlyGoal);
+                setTakingNewMembers(newTakingNewMembers);
                 goBack();
                 showSnackbar("Group settings saved");
               }}
@@ -7189,7 +7200,7 @@ function PrototypeApp() {
             transition={slideTrans}
             className="absolute inset-0"
           >
-            <GroupMembersScreen group={selectedGroup} isAdmin={membersAdminMode} onBack={goBack} />
+            <GroupMembersScreen group={selectedGroup} isAdmin={membersAdminMode} takingNewMembers={takingNewMembers} onBack={goBack} />
           </motion.div>
         )}
 
