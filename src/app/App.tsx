@@ -2681,7 +2681,15 @@ const EXAM_CUSTOM_CATEGORIES: ExamCustomCategory[] = [
       { id: "grade-9-20-11", label: "পেট্রোবাংলা ফুল মডেল টেস্ট [Archived]", checked: true },
     ],
   },
-  { id: "bar-council-bjs", label: "বার কাউন্সিল ও বিজেএস", Icon: Scale, expanded: false, items: [] },
+  {
+    id: "bar-council-bjs", label: "বার কাউন্সিল ও বিজেএস", Icon: Scale, expanded: false,
+    items: [
+      { id: "bar-council-bjs-1", label: "১৯তম জুডিসিয়াল সার্ভিস (BJS) প্রস্তুতি", checked: true },
+      { id: "bar-council-bjs-2", label: "বার কাউন্সিল এনরোলমেন্ট — ২০২৬", checked: true },
+      { id: "bar-council-bjs-3", label: "বার কাউন্সিল ও বিজেএস জব সল্যুশন", checked: true },
+      { id: "bar-council-bjs-4", label: "বার কাউন্সিল প্রস্তুতি - লং কোর্স [আর্কাইভ]", checked: true },
+    ],
+  },
   { id: "special-bcs-education", label: "স্পেশাল বিসিএস (শিক্ষা)", Icon: GraduationCap, expanded: false, items: [] },
   { id: "special-bcs-health", label: "স্পেশাল বিসিএস (স্বাস্থ্য)", Icon: Stethoscope, expanded: false, items: [] },
   { id: "nurse-midwifery", label: "নার্স ও মিডওয়াইফারি", Icon: User, expanded: false, items: [] },
