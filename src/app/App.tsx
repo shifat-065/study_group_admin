@@ -8,7 +8,7 @@ import {
   ThumbsUp, MessageCircle, Share2, Send, Globe, MoreHorizontal, ImageIcon, Star, User, Users,
   CalendarDays, Archive, ClipboardCheck, Trophy, Megaphone, Settings, Layers, FileText, Gavel, Download, Copy, Pencil, X, Gift, Wallet, Landmark, UserMinus, Shield, Bell, Trash2, MoreVertical,
   Filter, Calendar, CheckCircle2, XCircle, Clock, BookOpen, Award, PlaySquare, FileSpreadsheet, Sparkles, ExternalLink, BarChart3,
-  Briefcase, Camera, Ruler, FileQuestion, NotebookPen, GraduationCap, Stethoscope, Banknote,
+  Briefcase, Camera, Ruler, FileQuestion, NotebookPen, GraduationCap, Stethoscope, Banknote, Scale,
   type LucideIcon,
 } from "lucide-react";
 import { clsx } from "clsx";
@@ -2566,7 +2566,7 @@ const EXAM_CUSTOM_CATEGORIES: ExamCustomCategory[] = [
   { id: "bank-job-prep", label: "ব্যাংক নিয়োগ প্রস্তুতি", Icon: Camera, expanded: false, items: [] },
   { id: "teacher-registration", label: "শিক্ষক নিয়োগ ও নিবন্ধন", Icon: Ruler, expanded: false, items: [] },
   { id: "grade-9-20", label: "৯ম-২০তম গ্রেডের প্রস্তুতি", Icon: FileQuestion, expanded: false, items: [] },
-  { id: "bar-council-bjs", label: "বার কাউন্সিল ও বিজেএস", Icon: Gavel, expanded: false, items: [] },
+  { id: "bar-council-bjs", label: "বার কাউন্সিল ও বিজেএস", Icon: Scale, expanded: false, items: [] },
   { id: "special-bcs-education", label: "স্পেশাল বিসিএস (শিক্ষা)", Icon: GraduationCap, expanded: false, items: [] },
   { id: "special-bcs-health", label: "স্পেশাল বিসিএস (স্বাস্থ্য)", Icon: Stethoscope, expanded: false, items: [] },
   { id: "nurse-midwifery", label: "নার্স ও মিডওয়াইফারি", Icon: User, expanded: false, items: [] },
