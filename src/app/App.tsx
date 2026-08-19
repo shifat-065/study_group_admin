@@ -86,7 +86,7 @@ const EXAMS: Record<string, Array<{ name: string; isLive: boolean }>> = {
     { name: "ব্যাংক নিয়োগ প্রস্তুতি - লং কোর্স", isLive: false },
     { name: "২০২২ সাল ভিত্তিক সিনিয়র অফিসার নিয়োগ প্রস্তুতি", isLive: true },
     { name: "ব্যাংক ডেইলি কুইজ", isLive: false },
-    { name: "ব্যাংক মডেল টেস্ট [সাপ্তাহিক]", isLive: true },
+    { name: "মাসিক মডেল টেস্ট [পরিপূর্ণ সিলেবাস]", isLive: true },
   ],
   Bank: [
     { name: "Bank Job Preparation - 1st Phase", isLive: false },
@@ -507,7 +507,7 @@ const MANDATORY_EXAMS: Array<{ name: string; isLive: boolean }> = [
   { name: "ব্যাংক নিয়োগ প্রস্তুতি - লং কোর্স", isLive: false },
   { name: "২০২২ সাল ভিত্তিক সিনিয়র অফিসার নিয়োগ প্রস্তুতি", isLive: true },
   { name: "ব্যাংক ডেইলি কুইজ", isLive: false },
-  { name: "ব্যাংক মডেল টেস্ট [সাপ্তাহিক]", isLive: true },
+  { name: "মাসিক মডেল টেস্ট [পরিপূর্ণ সিলেবাস]", isLive: true },
 ];
 
 const QUICK_LINKS: Array<{ id: string; label: string; Icon: LucideIcon }> = [
@@ -2544,7 +2544,7 @@ const EXAM_CUSTOM_CATEGORIES: ExamCustomCategory[] = [
     id: "bank", label: "ব্যাংক নিয়োগ প্রস্তুতি", Icon: Wallet, expanded: false,
     items: [
       { id: "bank-1", label: "ব্যাংক ডেইলি কুইজ", checked: true },
-      { id: "bank-2", label: "ব্যাংক মডেল টেস্ট [সাপ্তাহিক]", checked: false },
+      { id: "bank-2", label: "মাসিক মডেল টেস্ট [পরিপূর্ণ সিলেবাস]", checked: false },
     ],
   },
   {
@@ -3725,16 +3725,26 @@ const DAILY_GOAL_PCTS = [
 // fixed schedule — but stays the same every time you open that exam's own screen, seeded
 // off its name so it doesn't reshuffle on every render.
 function examChartPcts(examName: string): number[] {
+  const n = DAILY_GOAL_PCTS.length;
   if (examName.includes("সাপ্তাহিক")) {
+    // Weekly exam lands on the same weekday every time (every 7th day) — that's exactly
+    // MONTHLY_EXAM_OCCURRENCES' weekly count (4) across a 31-day chart.
     return DAILY_GOAL_PCTS.map((pct, i) => (i % 7 === 6 ? pct : 0));
   }
+  // Active-day count matches this exam's real monthly occurrence count (23 for a daily exam,
+  // 1 for the monthly exam) — not a flat ~60%-of-days probability applied to every exam.
+  const idx = MONTHLY_EXAM_LIST.findIndex(e => e.name === examName);
+  const count = idx >= 0 ? MONTHLY_EXAM_OCCURRENCES[idx] : Math.round(n * 0.6);
+
   let seed = 0;
   for (let i = 0; i < examName.length; i++) seed = (seed * 31 + examName.charCodeAt(i)) >>> 0;
-  return DAILY_GOAL_PCTS.map((pct, i) => {
-    const x = Math.sin(seed + i * 97.13) * 10000;
-    const rand = x - Math.floor(x);
-    return rand < 0.6 ? pct : 0;
-  });
+  const rand = (k: number) => {
+    const x = Math.sin(seed + k * 97.13) * 10000;
+    return x - Math.floor(x);
+  };
+  const order = Array.from({ length: n }, (_, i) => i).sort((a, b) => rand(a) - rand(b));
+  const active = new Set(order.slice(0, Math.min(count, n)));
+  return DAILY_GOAL_PCTS.map((pct, i) => (active.has(i) ? pct : 0));
 }
 
 
@@ -4319,11 +4329,11 @@ const MEMBER_LIST: Member[] = [
   { name: "⭕️ Shuraiya Ripa", pct: 88.0, chip: "green", memberId: "WS225", since: "23 Mar 2023", rating: "A", level: 3, exams: 260, preparingFor: "BCS", gender: "Female", birthday: "14 May", majorSubject: "Political Science", institute: "University of Dhaka", district: "Dhaka", subgroup: "A" },
   { name: "Hridoy Hasan", pct: 88.0, chip: "green", memberId: "WS224", since: "1 Jul 2022", rating: "B", level: 2, exams: 190, preparingFor: "NTRCA", gender: "Male", birthday: "7 Sep", majorSubject: "Education", institute: "Khulna University", district: "Khulna", subgroup: "A" },
   { name: "©️Chonchol Ray ©️©️©️©️", pct: 88.0, chip: "green", memberId: "WS223", since: "23 Mar 2023", rating: "B", level: 1, exams: 150, preparingFor: "Bank", gender: "Male", birthday: "11 Mar", majorSubject: "Management", institute: "University of Dhaka", district: "Dhaka", subgroup: "A" },
-  { name: "Nusrat Jahan", pct: 15.0, chip: "red", memberId: "WS222", since: "9 Sep 2022", rating: "C", level: 1, exams: 40, preparingFor: "BAR / BJS", gender: "Female", birthday: "26 Jan", majorSubject: "Law", institute: "Dhaka University", district: "Dhaka", subgroup: "A" },
-  { name: "Kamrul Islam", pct: 45.0, chip: "yellow", memberId: "WS221", since: "2 Aug 2022", rating: "C", level: 2, exams: 95, preparingFor: "DP", gender: "Male", birthday: "20 Feb", majorSubject: "Statistics", institute: "Rajshahi University", district: "Rajshahi", subgroup: "A" },
-  { name: "রাকিবুল শেখ", pct: 75, chip: "yellow", memberId: "WS220", since: "4 Jan 2022", rating: "B", level: 1, exams: 30, preparingFor: "BCS", gender: "Male", birthday: "25 Mar", majorSubject: "English", institute: "University of Dhaka", district: "Dhaka", subgroup: "B" },
+  { name: "Nusrat Jahan", pct: 15.0, chip: "red", memberId: "WS222", since: "5 Aug 2026", rating: "C", level: 1, exams: 40, preparingFor: "BAR / BJS", gender: "Female", birthday: "26 Jan", majorSubject: "Law", institute: "Dhaka University", district: "Dhaka", subgroup: "A" },
+  { name: "Kamrul Islam", pct: 45.0, chip: "yellow", memberId: "WS221", since: "25 Jul 2026", rating: "C", level: 2, exams: 95, preparingFor: "DP", gender: "Male", birthday: "20 Feb", majorSubject: "Statistics", institute: "Rajshahi University", district: "Rajshahi", subgroup: "A" },
+  { name: "রাকিবুল শেখ", pct: 75, chip: "yellow", memberId: "WS220", since: "1 Aug 2026", rating: "B", level: 1, exams: 30, preparingFor: "BCS", gender: "Male", birthday: "25 Mar", majorSubject: "English", institute: "University of Dhaka", district: "Dhaka", subgroup: "B" },
   { name: "সাদিয়া তাবাসসুম", pct: 78, chip: "yellow", memberId: "WS219", since: "11 Feb 2023", rating: "B", level: 2, exams: 41, preparingFor: "Bank", gender: "Female", birthday: "4 Apr", majorSubject: "Accounting", institute: "Jahangirnagar University", district: "Chattogram", subgroup: "B" },
-  { name: "তানভীর কবির", pct: 81, chip: "green", memberId: "WS218", since: "18 Mar 2024", rating: "A", level: 3, exams: 52, preparingFor: "DP", gender: "Male", birthday: "11 May", majorSubject: "Physics", institute: "Chittagong University", district: "Rajshahi", subgroup: "B" },
+  { name: "তানভীর কবির", pct: 81, chip: "green", memberId: "WS218", since: "12 Aug 2026", rating: "A", level: 3, exams: 52, preparingFor: "DP", gender: "Male", birthday: "11 May", majorSubject: "Physics", institute: "Chittagong University", district: "Rajshahi", subgroup: "B" },
   { name: "ফারজানা ইয়াসমিন", pct: 84, chip: "green", memberId: "WS217", since: "25 Apr 2022", rating: "A", level: 1, exams: 63, preparingFor: "NTRCA", gender: "Female", birthday: "18 Jun", majorSubject: "Economics", institute: "Rajshahi University", district: "Khulna", subgroup: "B" },
   { name: "সাইফুল রহমান", pct: 87, chip: "green", memberId: "WS216", since: "4 May 2023", rating: "A", level: 2, exams: 74, preparingFor: "BAR / BJS", gender: "Male", birthday: "25 Jul", majorSubject: "Finance", institute: "Khulna University", district: "Sylhet", subgroup: "B" },
   { name: "তাসনিম সুলতানা", pct: 90, chip: "green", memberId: "WS215", since: "11 Jun 2024", rating: "A", level: 3, exams: 85, preparingFor: "BCS", gender: "Female", birthday: "4 Aug", majorSubject: "Political Science", institute: "Sylhet Agricultural University", district: "Barishal", subgroup: "B" },
@@ -4393,11 +4403,21 @@ function pctToChip(pct: number): AttendanceChip {
 
 type Zone = "red" | "yellow" | "green" | "probation";
 
-const ZONES: Record<Zone, { label: string; subtitle: string; bg: string; border: string; text: string; match: (pct: number) => boolean }> = {
-  red: { label: "Red zone", subtitle: "Below 60% attendance", bg: "#ffebee", border: "#ff3232", text: "#ff3232", match: pct => pct < 60 },
-  yellow: { label: "Yellow zone", subtitle: "60%–79% attendance", bg: "#fef9e7", border: "#784a00", text: "#784a00", match: pct => pct >= 60 && pct < 80 },
-  green: { label: "Green zone", subtitle: "80% and above attendance", bg: "#b7dfb9", border: "#264a34", text: "#264a34", match: pct => pct >= 80 },
-  probation: { label: "Probational zone", subtitle: "Below 20% attendance", bg: "#85d6ff", border: "#185a7a", text: "#185a7a", match: pct => pct < 20 },
+const PROBATION_DAYS = 30;
+
+// Days between a member's join date ("since", e.g. "23 Mar 2023") and today.
+function daysSinceJoin(since: string): number {
+  return Math.floor((Date.now() - new Date(since).getTime()) / (1000 * 60 * 60 * 24));
+}
+
+// Probation is tenure-based ("joined within the last 30 days"), not an attendance threshold —
+// it's independent of and can overlap red/yellow/green, so its match takes the whole member
+// (to read their join date) rather than just a percentage.
+const ZONES: Record<Zone, { label: string; subtitle: string; bg: string; border: string; text: string; match: (m: Member) => boolean }> = {
+  red: { label: "Red zone", subtitle: "Below 60% attendance", bg: "#ffebee", border: "#ff3232", text: "#ff3232", match: m => m.pct < 60 },
+  yellow: { label: "Yellow zone", subtitle: "60%–79% attendance", bg: "#fef9e7", border: "#784a00", text: "#784a00", match: m => m.pct >= 60 && m.pct < 80 },
+  green: { label: "Green zone", subtitle: "80% and above attendance", bg: "#b7dfb9", border: "#264a34", text: "#264a34", match: m => m.pct >= 80 },
+  probation: { label: "Probational zone", subtitle: `Joined within the last ${PROBATION_DAYS} days`, bg: "#85d6ff", border: "#185a7a", text: "#185a7a", match: m => daysSinceJoin(m.since) < PROBATION_DAYS },
 };
 
 // ── Subgroup data ─────────────────────────────────────────────────────────────
@@ -4498,7 +4518,7 @@ function zoneBarColor(pct: number) {
 
 function AdminMembersHubScreen({ group, onBack, onTotalMembers, onSelectZone, onAddMember }: { group: Group; onBack: () => void; onTotalMembers: () => void; onSelectZone: (zone: Zone) => void; onAddMember: () => void }) {
   const zoneCounts = (Object.keys(ZONES) as Zone[]).reduce((acc, zone) => {
-    acc[zone] = MEMBER_LIST.filter(m => ZONES[zone].match(m.pct)).length;
+    acc[zone] = MEMBER_LIST.filter(m => ZONES[zone].match(m)).length;
     return acc;
   }, {} as Record<Zone, number>);
 
@@ -4833,7 +4853,7 @@ function GroupMembersScreen({ onBack, group, zone, isAdmin, title, hideCountRow,
       return { ...m, pct, chip: pctToChip(pct) };
     });
   })();
-  const base = zoneConfig ? remaining.filter(m => zoneConfig.match(m.pct)) : remaining;
+  const base = zoneConfig ? remaining.filter(m => zoneConfig.match(m)) : remaining;
   const filtered = (query.trim() ? base.filter(m => m.name.toLowerCase().includes(query.trim().toLowerCase())) : base)
     .slice()
     .sort((a, b) => {
@@ -4996,7 +5016,7 @@ const EXAM_LIST: ExamListItem[] = [
   { name: "ফ্রি সাপ্তাহিক মডেল টেস্ট", attended: 8, total: MEMBER_LIST.length },
   { name: "গুরুত্বপূর্ণ টপিকের উপর পরীক্ষা", attended: 10, total: MEMBER_LIST.length },
   { name: "২০২২ সাল ভিত্তিক সিনিয়র অফিসার নিয়োগ প্রস্তুতি", attended: 7, total: MEMBER_LIST.length },
-  { name: "ব্যাংক মডেল টেস্ট [সাপ্তাহিক]", attended: 4, total: MEMBER_LIST.length },
+  { name: "মাসিক মডেল টেস্ট [পরিপূর্ণ সিলেবাস]", attended: 4, total: MEMBER_LIST.length },
 ];
 
 // Monthly Goal shows the full mandatory-exam list (Today's Goal only shows a trimmed 4).
@@ -5007,8 +5027,13 @@ const MONTHLY_EXAM_LIST: ExamListItem[] = [
   { name: "ব্যাংক নিয়োগ প্রস্তুতি - লং কোর্স", attended: 5, total: MEMBER_LIST.length },
   { name: "২০২২ সাল ভিত্তিক সিনিয়র অফিসার নিয়োগ প্রস্তুতি", attended: 7, total: MEMBER_LIST.length },
   { name: "ব্যাংক ডেইলি কুইজ", attended: 9, total: MEMBER_LIST.length },
-  { name: "ব্যাংক মডেল টেস্ট [সাপ্তাহিক]", attended: 4, total: MEMBER_LIST.length },
+  { name: "মাসিক মডেল টেস্ট [পরিপূর্ণ সিলেবাস]", attended: 4, total: MEMBER_LIST.length },
 ];
+
+// Real monthly occurrence count per exam in MONTHLY_EXAM_LIST (same order): the weekly exam
+// runs ~4×/month, the monthly exam runs 1×/month, and the 5 daily exams split the remaining
+// 115 of the 120 total monthly slots-per-member (EXAM_LIST.length × 30) evenly at 23 each.
+const MONTHLY_EXAM_OCCURRENCES = [4, 23, 23, 23, 23, 23, 1];
 
 type GoalMode = "today" | "monthly";
 
@@ -5017,7 +5042,7 @@ type GoalMode = "today" | "monthly";
 // each subgroup's own attended (from its goalPct) added up, and the percentage is derived
 // from that sum — never set independently.
 function computeGroupGoalAggregate(subgroups: SubgroupData[], mode: GoalMode): GoalDetailOverride {
-  const perMember = mode === "today" ? EXAM_LIST.length : 5 * 30;
+  const perMember = mode === "today" ? EXAM_LIST.length : EXAM_LIST.length * 30;
   let bigCount = 0, attended = 0;
   for (const sg of subgroups) {
     const total = sg.members * perMember;
@@ -5057,35 +5082,53 @@ function GoalDetailScreen({ mode, sg, onBack, onSelectExam, onViewAttendance, ov
     goalPct = override.goalPct;
   } else {
     const memberCount = sg.members;
-    // Today's total is a single day's worth of exams (member count × today's exam count).
-    // Monthly's total is a genuine month-scale aggregate — roughly 30 days at a typical
-    // daily rate of ~5 exams per member — so it's always meaningfully larger than any one
-    // day's total (e.g. 10 members × 5 × 30 = 1500, well above a ~40-60 daily range).
-    bigCount = mode === "today" ? memberCount * examList.length : memberCount * 5 * 30;
+    // Today's total is a single day's worth of exams (member count × today's 4-exam slate).
+    // Monthly's total is the real monthly must-have capacity per member: EXAM_LIST.length × 30
+    // days (120), matching MONTHLY_EXAM_OCCURRENCES' sum (4 + 23×5 + 1 = 120) — not a flat
+    // "5 exams/day" guess.
+    bigCount = mode === "today" ? memberCount * examList.length : memberCount * EXAM_LIST.length * 30;
     goalPct = mode === "today" ? sg.goalPct : sg.monthlyGoalPct;
     attended = Math.round(bigCount * goalPct / 100);
     remaining = Math.max(bigCount - attended, 0);
   }
 
-  // Every row's total is the same fixed number (one exam attempt per member — bigCount / n,
-  // which divides evenly for Today's goal since bigCount = memberCount × n) — real exam
-  // totals per member don't vary row to row. Only attended varies per row (weighted, so
-  // it doesn't look like a flat percentage repeated on every button), and both the row
-  // totals and the row attended counts still sum exactly to the numbers in the summary
-  // card above.
   const n = examList.length;
-  const baseTotal = Math.floor(bigCount / n);
-  const totalRemainder = bigCount - baseTotal * n;
-  const rowTotals = Array.from({ length: n }, (_, i) => baseTotal + (i < totalRemainder ? 1 : 0));
+  // Today's goal: all 4 exams run daily, so rows split bigCount evenly. Monthly goal: rows
+  // split by each exam's real occurrence count (MONTHLY_EXAM_OCCURRENCES) — the weekly exam's
+  // row is far smaller than the daily exams' rows, not an even 1/7th each. Leftover units from
+  // flooring go to the highest-weight (most frequent) rows first.
+  const occurrenceWeights = mode === "monthly" ? MONTHLY_EXAM_OCCURRENCES : undefined;
+  let rowTotals: number[];
+  if (occurrenceWeights) {
+    const weightSum = occurrenceWeights.reduce((a, b) => a + b, 0);
+    const raw = occurrenceWeights.map(w => (bigCount * w) / weightSum);
+    const floors = raw.map(Math.floor);
+    const used = floors.reduce((a, b) => a + b, 0);
+    const remainder = bigCount - used;
+    const order = raw
+      .map((v, i) => ({ i, frac: v - floors[i], w: occurrenceWeights[i] }))
+      .sort((a, b) => b.w - a.w || b.frac - a.frac);
+    rowTotals = [...floors];
+    for (let k = 0; k < remainder; k++) rowTotals[order[k].i] += 1;
+  } else {
+    const baseTotal = Math.floor(bigCount / n);
+    const totalRemainder = bigCount - baseTotal * n;
+    rowTotals = Array.from({ length: n }, (_, i) => baseTotal + (i < totalRemainder ? 1 : 0));
+  }
 
-  const weights = Array.from({ length: n }, (_, i) => 0.65 + ((i * 53 + 17) % 71) / 100);
-  const rowAttendedRaw = rowTotals.map((t, i) => Math.min(t, Math.round(t * goalPct * weights[i] / 100)));
+  // Only attended varies row to row (weighted, so it doesn't look like a flat percentage
+  // repeated on every button) — both the row totals and the row attended counts still sum
+  // exactly to the numbers in the summary card above.
+  const attendedWeights = Array.from({ length: n }, (_, i) => 0.65 + ((i * 53 + 17) % 71) / 100);
+  const rowAttendedRaw = rowTotals.map((t, i) => Math.min(t, Math.round(t * goalPct * attendedWeights[i] / 100)));
   const rowAttendedSum = rowAttendedRaw.reduce((a, b) => a + b, 0);
   let attendedDiff = attended - rowAttendedSum;
   const rowAttended = [...rowAttendedRaw];
-  // Nudge the rounded per-row attended counts so they sum exactly to `attended`, without
-  // pushing any row below 0 or above its own total.
-  for (let i = 0; attendedDiff !== 0 && i < n * 4; i++) {
+  // Budget sized to the actual gap (not a small fixed constant) — with weighted, non-mean-1
+  // row estimates, the gap scales with bigCount, and near 0%/100% most rows saturate so a
+  // single free row may need to absorb the whole gap alone (one nudge per n-iteration lap).
+  const nudgeBudget = Math.abs(attendedDiff) * n + n;
+  for (let i = 0; attendedDiff !== 0 && i < nudgeBudget; i++) {
     const idx = i % n;
     if (attendedDiff > 0 && rowAttended[idx] < rowTotals[idx]) { rowAttended[idx]++; attendedDiff--; }
     else if (attendedDiff < 0 && rowAttended[idx] > 0) { rowAttended[idx]--; attendedDiff++; }
@@ -5418,9 +5461,9 @@ function SubgroupDetailScreen({ onBack, sg, groupName, onTodayGoal, onMonthlyGoa
   const goalChipColor = pctChipStyle(sg.goalPct);
   const todayTotal = EXAM_LIST.length * sg.members;
   const todayAttended = Math.round(todayTotal * sg.goalPct / 100);
-  // Monthly total is a month-scale aggregate (see GoalDetailScreen), not the exam-type row
-  // count, so it's always meaningfully larger than a single day's total.
-  const monthTotal = sg.members * 5 * 30;
+  // Monthly total is the real monthly must-have capacity per member: EXAM_LIST.length × 30
+  // (120), matching GoalDetailScreen and MONTHLY_EXAM_OCCURRENCES' sum.
+  const monthTotal = sg.members * EXAM_LIST.length * 30;
   const monthAttended = Math.round(monthTotal * sg.monthlyGoalPct / 100);
   const todayPct = sg.goalPct;
   const monthPct = sg.monthlyGoalPct;
@@ -5837,16 +5880,14 @@ const MAX_SUBGROUP_MEMBERS = 20;
 
 interface SubgroupCandidate { name: string; pct: number; assignedTo: string | null }
 
-const CREATE_SUBGROUP_CANDIDATES: SubgroupCandidate[] = [
-  { name: "আরিফ হোসেন", pct: 85.0, assignedTo: null },
-  { name: "মেহজাবিন সুলতানা", pct: 85.0, assignedTo: "B" },
-  { name: "রাহুল চৌধুরী", pct: 85.0, assignedTo: "B" },
-  { name: "লিসিতা করিম", pct: 85.0, assignedTo: null },
-  { name: "সুমাইয়া রহমান", pct: 85.0, assignedTo: null },
-  { name: "তানভীর আহমেদ", pct: 85.0, assignedTo: null },
-  { name: "নুসরাত জাহান", pct: 85.0, assignedTo: null },
-  { name: "সাইফুল ইসলাম", pct: 85.0, assignedTo: null },
-];
+// Draws from the real 64-member roster (each member's actual subgroup letter, if any) instead
+// of a separately invented name list — so this picker can never show someone who doesn't
+// exist in MEMBER_LIST.
+const CREATE_SUBGROUP_CANDIDATES: SubgroupCandidate[] = MEMBER_LIST.map(m => ({
+  name: m.name,
+  pct: m.pct,
+  assignedTo: m.subgroup || null,
+}));
 
 // Reached from an existing Subgroup's "Add member" button — picks from the group's remaining
 // members (same pool/rules as Create Subgroup step 1: already-assigned members show their
@@ -6374,7 +6415,8 @@ function MonthlyGoalExamDetailScreen({ examName, group, sg, override, examTotals
   // Group-level entry (override set) shows the whole group. Reached by tapping a specific
   // exam row from a subgroup's Monthly Goal, examTotals carries that row's own total/attended
   // (matching the number the user just tapped) instead of a separately recomputed figure.
-  const monthTotal = examTotals ? examTotals.total : override ? override.bigCount : sg.members * 4;
+  const examOccurrences = MONTHLY_EXAM_OCCURRENCES[MONTHLY_EXAM_LIST.findIndex(e => e.name === examName)] ?? 23;
+  const monthTotal = examTotals ? examTotals.total : override ? override.bigCount : sg.members * examOccurrences;
   const monthAttended = examTotals ? examTotals.attended : override ? override.attended : Math.round(monthTotal * sg.monthlyGoalPct / 100);
   const goalPct = monthTotal > 0 ? (monthAttended / monthTotal) * 100 : 0;
   const monthRemaining = Math.max(monthTotal - monthAttended, 0);
@@ -6593,7 +6635,13 @@ function MonthlyGoalExamDetailScreen({ examName, group, sg, override, examTotals
 
 function PrototypeApp() {
   const [stack, setStack] = useState<Screen[]>(["adminHome"]);
-  const [selectedGroup, setSelectedGroup] = useState<Group | null>(GROUPS[0]);
+  // GROUPS[0] ("The Winner") is the admin's own real group — its avgAttendance is overridden
+  // with the real mean of MEMBER_LIST's own attendance percentages, not the stored fictional
+  // placeholder, so it can't drift out of sync with the real roster.
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(() => ({
+    ...GROUPS[0],
+    avgAttendance: MEMBER_LIST.reduce((s, m) => s + m.pct, 0) / MEMBER_LIST.length,
+  }));
   const [selectedSubgroup, setSelectedSubgroup] = useState<SubgroupData | null>(null);
   const [selectedExamName, setSelectedExamName] = useState<string | null>(null);
   const [selectedExamTotals, setSelectedExamTotals] = useState<{ total: number; attended: number } | null>(null);
