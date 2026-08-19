@@ -6027,11 +6027,9 @@ const MAX_SUBGROUP_MEMBERS = 20;
 
 interface SubgroupCandidate { name: string; pct: number; assignedTo: string | null }
 
-// Draws from the real 64-member roster plus the unassigned pool (each member's actual
-// subgroup letter, if any) instead of a separately invented name list — so this picker can
-// never show someone who doesn't exist in MEMBER_LIST, and always has real selectable
-// (unassigned) candidates alongside the already-assigned, disabled ones.
-const CREATE_SUBGROUP_CANDIDATES: SubgroupCandidate[] = [...MEMBER_LIST, ...UNASSIGNED_MEMBER_POOL].map(m => ({
+// Only the unassigned pool — members already in a subgroup shouldn't appear here at all,
+// not even as disabled rows.
+const CREATE_SUBGROUP_CANDIDATES: SubgroupCandidate[] = UNASSIGNED_MEMBER_POOL.map(m => ({
   name: m.name,
   pct: m.pct,
   assignedTo: m.subgroup || null,
