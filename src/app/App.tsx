@@ -4399,13 +4399,8 @@ const MEMBER_LIST: Member[] = [
   { name: "ইতি আক্তার", pct: 78, chip: "yellow", memberId: "WS169", since: "25 Apr 2022", rating: "B", level: 1, exams: 71, preparingFor: "Bank", gender: "Female", birthday: "18 Jun", majorSubject: "History", institute: "Barishal University", district: "Rangpur", subgroup: "H" },
   { name: "তানজিল রশীদ", pct: 81, chip: "green", memberId: "WS168", since: "4 May 2023", rating: "A", level: 2, exams: 82, preparingFor: "DP", gender: "Male", birthday: "25 Jul", majorSubject: "Chemistry", institute: "Comilla University", district: "Mymensingh", subgroup: "H" },
   { name: "স্বর্ণা জাহান", pct: 84, chip: "green", memberId: "WS167", since: "11 Jun 2024", rating: "A", level: 3, exams: 93, preparingFor: "NTRCA", gender: "Female", birthday: "4 Aug", majorSubject: "Mathematics", institute: "Jagannath University", district: "Cumilla", subgroup: "H" },
-];
-
-// Members who've joined the group but aren't in a subgroup yet — separate from MEMBER_LIST
-// (which stays at the real 64 enrolled-and-assigned roster) so "Total members" / avg
-// attendance / zone counts don't shift. Only Create Subgroup and Add member draw from this
-// pool, giving those flows real selectable candidates instead of everyone already assigned.
-const UNASSIGNED_MEMBER_POOL: Member[] = [
+  // Joined the group but not assigned to a subgroup yet — counts toward the real total member
+  // count, avg attendance, and zone breakdowns, and is the selectable pool for Create Subgroup.
   { name: "রাহাত হোসেন", pct: 47.9, chip: "yellow", memberId: "WS166", since: "1 Jan 2022", rating: "C", level: 1, exams: 33, preparingFor: "BCS", gender: "Male", birthday: "1 Jan", majorSubject: "English", institute: "University of Dhaka", district: "Dhaka", subgroup: "" },
   { name: "সাদিয়া আক্তার", pct: 91, chip: "green", memberId: "WS165", since: "2 Feb 2023", rating: "A", level: 2, exams: 80, preparingFor: "Bank", gender: "Female", birthday: "2 Apr", majorSubject: "Accounting", institute: "Jahangirnagar University", district: "Khulna", subgroup: "" },
   { name: "ইমরান খান", pct: 41.8, chip: "yellow", memberId: "WS164", since: "3 Mar 2024", rating: "C", level: 3, exams: 93, preparingFor: "NTRCA", gender: "Male", birthday: "3 Jul", majorSubject: "Sociology", institute: "Rajshahi University", district: "Bogura", subgroup: "" },
@@ -6027,13 +6022,17 @@ const MAX_SUBGROUP_MEMBERS = 20;
 
 interface SubgroupCandidate { name: string; pct: number; assignedTo: string | null }
 
-// Only the unassigned pool — members already in a subgroup shouldn't appear here at all,
-// not even as disabled rows.
-const CREATE_SUBGROUP_CANDIDATES: SubgroupCandidate[] = UNASSIGNED_MEMBER_POOL.map(m => ({
+// Full roster (used by the captain picker, which needs to resolve any existing captain by
+// name regardless of subgroup).
+const CREATE_SUBGROUP_CANDIDATES: SubgroupCandidate[] = MEMBER_LIST.map(m => ({
   name: m.name,
   pct: m.pct,
   assignedTo: m.subgroup || null,
 }));
+
+// Members not yet in any subgroup — the real selectable pool for Create Subgroup / Add member,
+// so members already in a subgroup shouldn't appear here at all, not even as disabled rows.
+const UNASSIGNED_SUBGROUP_CANDIDATES: SubgroupCandidate[] = CREATE_SUBGROUP_CANDIDATES.filter(c => !c.assignedTo);
 
 // Reached from an existing Subgroup's "Add member" button — picks from the group's remaining
 // members (same pool/rules as Create Subgroup step 1: already-assigned members show their
@@ -6042,7 +6041,6 @@ function AddSubgroupMemberSheet({ onCancel, onAdd }: { onCancel: () => void; onA
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   function toggle(candidate: SubgroupCandidate) {
-    if (candidate.assignedTo) return;
     setSelected(prev => {
       const next = new Set(prev);
       if (next.has(candidate.name)) next.delete(candidate.name);
@@ -6075,23 +6073,20 @@ function AddSubgroupMemberSheet({ onCancel, onAdd }: { onCancel: () => void; onA
         <div className="border-t border-[#c7c5ce]" />
 
         <div className="flex-1 overflow-y-auto flex flex-col pt-2">
-          {CREATE_SUBGROUP_CANDIDATES.map((candidate, i) => {
+          {UNASSIGNED_SUBGROUP_CANDIDATES.map((candidate, i) => {
             const chip = CHIP_STYLES[pctToChip(candidate.pct)];
             const isSelected = selected.has(candidate.name);
-            const disabled = !!candidate.assignedTo;
             return (
               <div key={candidate.name}>
                 <button
                   onClick={() => toggle(candidate)}
-                  disabled={disabled}
-                  className={clsx("w-full flex items-center gap-2 px-4 py-2 text-left transition-colors", !disabled && "active:bg-gray-50")}
+                  className="w-full flex items-center gap-2 px-4 py-2 text-left transition-colors active:bg-gray-50"
                 >
                   <MemberAvatar size={30} name={candidate.name} />
                   <span className="flex-1 min-w-0 font-['Noto_Sans',sans-serif] font-medium text-[16px] text-black tracking-[0.15px] leading-6 truncate">
                     {candidate.name}
                   </span>
                   <div className="flex items-center gap-1 shrink-0">
-                    {candidate.assignedTo && <RatingBadge letter={candidate.assignedTo} />}
                     <div className="rounded-[16px] h-6 px-3 flex items-center justify-center shrink-0" style={{ backgroundColor: chip.bg }}>
                       <span className="font-['Noto_Sans',sans-serif] text-[12px] font-medium" style={{ color: chip.text }}>
                         {candidate.pct.toFixed(1)}%
@@ -6100,14 +6095,14 @@ function AddSubgroupMemberSheet({ onCancel, onAdd }: { onCancel: () => void; onA
                     <div
                       className={clsx(
                         "size-[18px] rounded-[2px] shrink-0 flex items-center justify-center",
-                        disabled ? "opacity-38 border-2 border-black" : isSelected ? "bg-[#1441cc]" : "border-2 border-[#787878]",
+                        isSelected ? "bg-[#1441cc]" : "border-2 border-[#787878]",
                       )}
                     >
-                      {isSelected && !disabled && <Check className="size-3.5 text-white" strokeWidth={3} />}
+                      {isSelected && <Check className="size-3.5 text-white" strokeWidth={3} />}
                     </div>
                   </div>
                 </button>
-                {i < CREATE_SUBGROUP_CANDIDATES.length - 1 && <div className="mx-4 border-t border-[#C7C5CE]" />}
+                {i < UNASSIGNED_SUBGROUP_CANDIDATES.length - 1 && <div className="mx-4 border-t border-[#C7C5CE]" />}
               </div>
             );
           })}
@@ -6186,12 +6181,11 @@ function CreateSubgroupScreen({ onBack, onCreate, existingCount }: { onBack: () 
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [captain, setCaptain] = useState<string | null>(null);
 
-  const filtered = (query.trim() ? CREATE_SUBGROUP_CANDIDATES.filter(c => c.name.includes(query.trim())) : CREATE_SUBGROUP_CANDIDATES)
+  const filtered = (query.trim() ? UNASSIGNED_SUBGROUP_CANDIDATES.filter(c => c.name.includes(query.trim())) : UNASSIGNED_SUBGROUP_CANDIDATES)
     .slice()
     .sort((a, b) => (sortDesc ? b.pct - a.pct : a.pct - b.pct));
 
   function toggle(candidate: SubgroupCandidate) {
-    if (candidate.assignedTo) return;
     setSelected(prev => {
       const next = new Set(prev);
       if (next.has(candidate.name)) {
@@ -6203,7 +6197,7 @@ function CreateSubgroupScreen({ onBack, onCreate, existingCount }: { onBack: () 
     });
   }
 
-  const selectedCandidates = CREATE_SUBGROUP_CANDIDATES.filter(c => selected.has(c.name));
+  const selectedCandidates = UNASSIGNED_SUBGROUP_CANDIDATES.filter(c => selected.has(c.name));
 
   if (step === 2) {
     return (
@@ -6339,20 +6333,17 @@ function CreateSubgroupScreen({ onBack, onCreate, existingCount }: { onBack: () 
           {filtered.map((candidate, i) => {
             const chip = CHIP_STYLES[pctToChip(candidate.pct)];
             const isSelected = selected.has(candidate.name);
-            const disabled = !!candidate.assignedTo;
             return (
               <div key={candidate.name}>
                 <button
                   onClick={() => toggle(candidate)}
-                  disabled={disabled}
-                  className={clsx("w-full flex items-center gap-2 px-4 py-2 text-left transition-colors", !disabled && "active:bg-gray-50")}
+                  className="w-full flex items-center gap-2 px-4 py-2 text-left transition-colors active:bg-gray-50"
                 >
                   <MemberAvatar size={30} name={candidate.name} />
                   <span className="flex-1 min-w-0 font-['Noto_Sans',sans-serif] font-medium text-[16px] text-black tracking-[0.15px] leading-6 truncate">
                     {candidate.name}
                   </span>
                   <div className="flex items-center gap-1 shrink-0">
-                    {candidate.assignedTo && <RatingBadge letter={candidate.assignedTo} />}
                     <div className="rounded-[16px] h-6 px-3 flex items-center justify-center shrink-0" style={{ backgroundColor: chip.bg }}>
                       <span className="font-['Noto_Sans',sans-serif] text-[12px] font-medium" style={{ color: chip.text }}>
                         {candidate.pct.toFixed(1)}%
@@ -6361,10 +6352,10 @@ function CreateSubgroupScreen({ onBack, onCreate, existingCount }: { onBack: () 
                     <div
                       className={clsx(
                         "size-[18px] rounded-[2px] shrink-0 flex items-center justify-center",
-                        disabled ? "opacity-38 border-2 border-black" : isSelected ? "bg-[#1441cc]" : "border-2 border-[#787878]",
+                        isSelected ? "bg-[#1441cc]" : "border-2 border-[#787878]",
                       )}
                     >
-                      {isSelected && !disabled && <Check className="size-3.5 text-white" strokeWidth={3} />}
+                      {isSelected && <Check className="size-3.5 text-white" strokeWidth={3} />}
                     </div>
                   </div>
                 </button>
@@ -6752,12 +6743,13 @@ function MonthlyGoalExamDetailScreen({ examName, group, sg, override, examTotals
 
 function PrototypeApp() {
   const [stack, setStack] = useState<Screen[]>(["adminHome"]);
-  // GROUPS[0] ("The Winner") is the admin's own real group — its avgAttendance is overridden
-  // with the real mean of MEMBER_LIST's own attendance percentages, not the stored fictional
-  // placeholder, so it can't drift out of sync with the real roster.
+  // GROUPS[0] ("The Winner") is the admin's own real group — its avgAttendance and members
+  // count are overridden with MEMBER_LIST's real values, not the stored fictional placeholders,
+  // so they can't drift out of sync with the real roster (which includes unassigned members).
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(() => ({
     ...GROUPS[0],
     avgAttendance: MEMBER_LIST.reduce((s, m) => s + m.pct, 0) / MEMBER_LIST.length,
+    members: MEMBER_LIST.length,
   }));
   const [selectedSubgroup, setSelectedSubgroup] = useState<SubgroupData | null>(null);
   const [selectedExamName, setSelectedExamName] = useState<string | null>(null);
