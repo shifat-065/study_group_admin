@@ -2763,16 +2763,6 @@ function AdminExamCustomisationScreen({ onBack, onSave }: { onBack: () => void; 
     ));
   }
 
-  // Connects the category's own checkbox to every item under it — checking/unchecking the
-  // main row selects/deselects the whole subgroup of items in one tap.
-  function toggleCategoryAll(categoryId: string) {
-    setCategories(prev => prev.map(c => {
-      if (c.id !== categoryId || c.items.length === 0) return c;
-      const allChecked = c.items.every(i => i.checked);
-      return { ...c, items: c.items.map(i => ({ ...i, checked: !allChecked })) };
-    }));
-  }
-
   const totalButtons = categories.reduce((sum, c) => sum + c.items.filter(i => i.checked).length, 0);
 
   return (
@@ -2791,38 +2781,18 @@ function AdminExamCustomisationScreen({ onBack, onSave }: { onBack: () => void; 
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-2 flex flex-col gap-2">
-        {categories.map(category => {
-          const allChecked = category.items.length > 0 && category.items.every(i => i.checked);
-          return (
+        {categories.map(category => (
           <div key={category.id} className="flex flex-col gap-2 py-3">
-            <div className="flex items-center gap-3">
-              {category.items.length > 0 && (
-                <button
-                  onClick={() => toggleCategoryAll(category.id)}
-                  aria-label={`Select all ${category.label}`}
-                  className="shrink-0 active:opacity-70 transition-opacity"
-                >
-                  <div
-                    className={clsx(
-                      "size-[18px] rounded-[2px] shrink-0 flex items-center justify-center",
-                      allChecked ? "bg-[#1441cc]" : "border-2 border-[#787878]",
-                    )}
-                  >
-                    {allChecked && <Check className="size-3.5 text-white" strokeWidth={3} />}
-                  </div>
-                </button>
-              )}
-              <button
-                onClick={() => toggleExpanded(category.id)}
-                className="flex-1 min-w-0 flex items-center justify-between gap-3 active:opacity-70 transition-opacity"
-              >
-                <div className="flex-1 min-w-0 flex items-center gap-3">
-                  <category.Icon className="size-5 text-black shrink-0" strokeWidth={1.5} />
-                  <span className="flex-1 font-['Noto_Sans',sans-serif] font-medium text-[16px] text-black leading-6 text-left">{category.label}</span>
-                </div>
-                <ChevronDown className={clsx("size-6 text-black shrink-0 transition-transform", category.expanded && "rotate-180")} strokeWidth={1.5} />
-              </button>
-            </div>
+            <button
+              onClick={() => toggleExpanded(category.id)}
+              className="flex items-center justify-between gap-3 active:opacity-70 transition-opacity"
+            >
+              <div className="flex-1 min-w-0 flex items-center gap-3">
+                <category.Icon className="size-5 text-black shrink-0" strokeWidth={1.5} />
+                <span className="flex-1 font-['Noto_Sans',sans-serif] font-medium text-[16px] text-black leading-6 text-left">{category.label}</span>
+              </div>
+              <ChevronDown className={clsx("size-6 text-black shrink-0 transition-transform", category.expanded && "rotate-180")} strokeWidth={1.5} />
+            </button>
             {category.expanded && (
               <div className="flex flex-col gap-2">
                 {category.items.map(item => (
@@ -2845,8 +2815,7 @@ function AdminExamCustomisationScreen({ onBack, onSave }: { onBack: () => void; 
               </div>
             )}
           </div>
-          );
-        })}
+        ))}
       </div>
 
       <div className="shrink-0 border-t border-[#c7c5ce] flex flex-col gap-4 px-4 pt-4">
