@@ -2470,13 +2470,21 @@ function ZoneThresholdLegendRow({ color, label, range }: { color: string; label:
   );
 }
 
-function AdminGroupSettingsScreen({ onBack, onSave }: { onBack: () => void; onSave: () => void }) {
+function AdminGroupSettingsScreen({ onBack, onSave, group, monthlyGoalTarget }: { onBack: () => void; onSave: (monthlyGoal: number) => void; group: Group; monthlyGoalTarget: number }) {
   const [takingNewMembers, setTakingNewMembers] = useState(false);
-  const [memberLimit, setMemberLimit] = useState("300");
-  const [subgroupLimit, setSubgroupLimit] = useState("20");
-  const [monthlyGoal, setMonthlyGoal] = useState("600");
-  const [midThreshold, setMidThreshold] = useState(50);
-  const [highThreshold, setHighThreshold] = useState(80);
+  // Defaults trace to the real group data instead of independent placeholder numbers —
+  // member limit is the group's real maxMembers, subgroup limit matches MAX_SUBGROUP_MEMBERS
+  // (the same cap CreateSubgroupScreen enforces), and "Monthly goal (exams)" starts at the
+  // real must-have exam capacity for the whole roster this month (monthlyGoalTarget, passed
+  // in from PrototypeApp) — saving here actually updates the group-level Monthly Goal
+  // card/page instead of only changing this screen's own local state.
+  const [memberLimit, setMemberLimit] = useState(String(group.maxMembers));
+  const [subgroupLimit, setSubgroupLimit] = useState(String(MAX_SUBGROUP_MEMBERS));
+  const [monthlyGoal, setMonthlyGoal] = useState(String(monthlyGoalTarget));
+  // Matches ZONES' real red/yellow/green boundaries (below 60% / 60–79% / 80%+), not
+  // separately-guessed slider defaults.
+  const [midThreshold, setMidThreshold] = useState(59);
+  const [highThreshold, setHighThreshold] = useState(79);
 
   return (
     <div className="flex flex-col h-full bg-white overflow-hidden">
@@ -2520,7 +2528,7 @@ function AdminGroupSettingsScreen({ onBack, onSave }: { onBack: () => void; onSa
 
       <div className="shrink-0 p-3">
         <button
-          onClick={onSave}
+          onClick={() => onSave(Number(monthlyGoal) || monthlyGoalTarget)}
           className="w-full h-14 bg-[#1441cc] rounded-full flex items-center justify-center active:opacity-90 transition-opacity"
         >
           <span className="font-['Noto_Sans',sans-serif] font-medium text-[16px] text-white tracking-[0.15px]">Save</span>
@@ -2535,24 +2543,21 @@ function AdminGroupSettingsScreen({ onBack, onSave }: { onBack: () => void; onSa
 interface ExamCustomItem { id: string; label: string; checked: boolean }
 interface ExamCustomCategory { id: string; label: string; Icon: LucideIcon; expanded: boolean; items: ExamCustomItem[] }
 
+// Built from the real MANDATORY_EXAMS list (the same 7 exams shown on Today's/Monthly Goal),
+// grouped by real cadence — 1 weekly, 5 daily, 1 monthly — instead of a separately hand-typed
+// 5-item subset that didn't cover the full list.
 const EXAM_CUSTOM_CATEGORIES: ExamCustomCategory[] = [
   {
-    id: "weekly", label: "ফ্রি সাপ্তাহিক মডেল টেস্ট", Icon: Gift, expanded: true,
-    items: [{ id: "weekly-1", label: "ফ্রি সাপ্তাহিক মডেল টেস্ট", checked: true }],
+    id: "weekly", label: "সাপ্তাহিক পরীক্ষা", Icon: Gift, expanded: true,
+    items: MANDATORY_EXAMS.slice(0, 1).map((exam, i) => ({ id: `weekly-${i + 1}`, label: exam.name, checked: true })),
   },
   {
-    id: "bank", label: "ব্যাংক নিয়োগ প্রস্তুতি", Icon: Wallet, expanded: false,
-    items: [
-      { id: "bank-1", label: "ব্যাংক ডেইলি কুইজ", checked: true },
-      { id: "bank-2", label: "মাসিক মডেল টেস্ট [পরিপূর্ণ সিলেবাস]", checked: false },
-    ],
+    id: "daily", label: "দৈনিক পরীক্ষা", Icon: Wallet, expanded: true,
+    items: MANDATORY_EXAMS.slice(1, 6).map((exam, i) => ({ id: `daily-${i + 1}`, label: exam.name, checked: true })),
   },
   {
-    id: "bcs", label: "৪৭তম বিসিএস প্রস্তুতি", Icon: Landmark, expanded: true,
-    items: [
-      { id: "bcs-1", label: "১৪০ দিনে ৪৭তম বিসিএস প্রস্তুতি", checked: true },
-      { id: "bcs-2", label: "গুরুত্বপূর্ণ টপিকের উপর পরীক্ষা", checked: true },
-    ],
+    id: "monthly", label: "মাসিক পরীক্ষা", Icon: Landmark, expanded: false,
+    items: MANDATORY_EXAMS.slice(6, 7).map((exam, i) => ({ id: `monthly-${i + 1}`, label: exam.name, checked: true })),
   },
 ];
 
@@ -3872,23 +3877,25 @@ function MonthPickerModal({
 }) {
   const today = new Date();
   today.setDate(1);
+  // Latest selectable month is last month — current month has no data yet.
+  const maxDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
   // allow up to 24 months back
   const minDate = new Date(today.getFullYear(), today.getMonth() - 23, 1);
   // Reset goes back to the default selection: last month.
-  const defaultMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  const defaultMonth = maxDate;
 
   const [viewYear, setViewYear] = useState(selectedMonth.getFullYear());
 
   function isDisabled(mIdx: number) {
     const d = new Date(viewYear, mIdx, 1);
-    return d > today || d < minDate;
+    return d > maxDate || d < minDate;
   }
   function isSelected(mIdx: number) {
     return viewYear === selectedMonth.getFullYear() && mIdx === selectedMonth.getMonth();
   }
 
   const canPrevYear = new Date(viewYear - 1, 11, 1) >= minDate;
-  const canNextYear = new Date(viewYear + 1, 0, 1) <= today;
+  const canNextYear = new Date(viewYear + 1, 0, 1) <= maxDate;
 
   return (
     <motion.div
@@ -5076,6 +5083,10 @@ type GoalMode = "today" | "monthly";
 // every subgroup: total = each subgroup's own member×exam-count total added up, attended =
 // each subgroup's own attended (from its goalPct) added up, and the percentage is derived
 // from that sum — never set independently.
+// "Live Exams (Estimated)" is always the real exam-cadence-derived capacity — every
+// member's real monthly slot count (EXAM_LIST.length × 30) summed across the roster — never
+// overridden by the admin's separate Monthly Goal *target* (that target is a distinct number
+// shown in the Monthly goal chart, not a replacement for this real estimate).
 function computeGroupGoalAggregate(subgroups: SubgroupData[], mode: GoalMode): GoalDetailOverride {
   const perMember = mode === "today" ? EXAM_LIST.length : EXAM_LIST.length * 30;
   let bigCount = 0, attended = 0;
@@ -5085,8 +5096,8 @@ function computeGroupGoalAggregate(subgroups: SubgroupData[], mode: GoalMode): G
     bigCount += total;
     attended += Math.round(total * pct / 100);
   }
-  const remaining = Math.max(bigCount - attended, 0);
   const goalPct = bigCount > 0 ? (attended / bigCount) * 100 : 0;
+  const remaining = Math.max(bigCount - attended, 0);
   return { goalPct, bigCount, attended, remaining, barPct: goalPct };
 }
 
@@ -5097,7 +5108,7 @@ function computeGroupGoalAggregate(subgroups: SubgroupData[], mode: GoalMode): G
 // 150 attended / 53 remaining) don't reduce to any subgroup's member/goalPct math.
 interface GoalDetailOverride { goalPct: number; bigCount: number; attended: number; remaining: number; barPct: number }
 
-function GoalDetailScreen({ mode, sg, onBack, onSelectExam, onViewAttendance, override }: { mode: GoalMode; sg: SubgroupData; onBack: () => void; onSelectExam: (exam: ExamListItem) => void; onViewAttendance: (exam: ExamListItem) => void; override?: GoalDetailOverride }) {
+function GoalDetailScreen({ mode, sg, onBack, onSelectExam, onViewAttendance, override, monthlyGoalTarget }: { mode: GoalMode; sg: SubgroupData; onBack: () => void; onSelectExam: (exam: ExamListItem) => void; onViewAttendance: (exam: ExamListItem) => void; override?: GoalDetailOverride; monthlyGoalTarget?: number }) {
   const ns = { fontVariationSettings: '"CTGR" 0, "wdth" 100' };
   const [showExamsInfo, setShowExamsInfo] = useState(false);
 
@@ -5172,6 +5183,20 @@ function GoalDetailScreen({ mode, sg, onBack, onSelectExam, onViewAttendance, ov
   const barPct = goalPct;
 
   const chipColor = pctChipStyle(goalPct);
+
+  // The Monthly goal chart tracks progress against the admin's own saved target (Group
+  // Settings' "Monthly goal (exams)"), separate from "Live Exams (Estimated)" above — that
+  // stays the real exam-cadence estimate (bigCount), never overridden. Falls back to bigCount
+  // when no admin target is available (e.g. a subgroup's own Monthly Goal page).
+  const monthlyChartTotal = monthlyGoalTarget ?? bigCount;
+  const monthlyChartRatio = monthlyChartTotal > 0 ? Math.min(100, (attended / monthlyChartTotal) * 100) : 0;
+  const monthlyChartPcts = (() => {
+    if (mode !== "monthly") return [];
+    const currentAvg = DAILY_GOAL_PCTS.reduce((a, b) => a + b, 0) / DAILY_GOAL_PCTS.length;
+    if (currentAvg === 0) return DAILY_GOAL_PCTS;
+    const scale = monthlyChartRatio / currentAvg;
+    return DAILY_GOAL_PCTS.map(p => Math.min(100, Math.max(0, Math.round(p * scale))));
+  })();
 
   return (
     <div className="flex flex-col h-full bg-white overflow-hidden relative">
@@ -5269,6 +5294,31 @@ function GoalDetailScreen({ mode, sg, onBack, onSelectExam, onViewAttendance, ov
               </button>
             </div>
           </div>
+
+          {/* Monthly goal chart — total attendance against total monthly-goal exams, by date */}
+          {mode === "monthly" && (
+            <div className="bg-[#f4f6fa] rounded-[16px] p-3 flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <span className="font-['Noto_Sans',sans-serif] font-medium text-[14px] text-black leading-5" style={ns}>Monthly goal</span>
+                <span className="font-['Noto_Sans',sans-serif] font-medium text-[14px] text-black leading-5" style={ns}>{monthlyChartTotal >= 1000 ? `${(monthlyChartTotal / 1000).toFixed(1)} K` : monthlyChartTotal}</span>
+              </div>
+              <div className="grid gap-x-1 h-[100px] items-end" style={{ gridTemplateColumns: `repeat(${monthlyChartPcts.length}, minmax(0, 1fr))` }}>
+                {monthlyChartPcts.map((pct, i) => (
+                  <div key={i} className="relative h-full w-full rounded-full overflow-hidden bg-[#e3e3e3]">
+                    {pct > 0 && (
+                      <div className="absolute bottom-0 left-0 right-0 rounded-full" style={{ height: `${pct}%`, backgroundColor: zoneBarColor(pct) }} />
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center justify-between">
+                {[1, 10, 20, monthlyChartPcts.length].map(day => (
+                  <span key={day} className="font-['Noto_Sans',sans-serif] font-medium text-[10px] text-[#8f8d8d] leading-4" style={ns}>{day}</span>
+                ))}
+              </div>
+              <span className="text-center font-['Noto_Sans',sans-serif] font-medium text-[12px] text-black leading-4" style={ns}>{monthlyChartRatio.toFixed(1)}% achievement ratio</span>
+            </div>
+          )}
 
           {/* Mandatory exam list */}
           <div className="flex flex-col gap-3">
@@ -6487,12 +6537,6 @@ function MonthlyGoalExamDetailScreen({ examName, group, sg, override, examTotals
   const monthRemaining = Math.max(monthTotal - monthAttended, 0);
   const monthBarPct = goalPct;
 
-  const chartPcts = examChartPcts(examName);
-  // Achievement ratio is the average of this exam's own active-day chart bars, not the
-  // Live Exams card's percentage — the two are independent numbers on this screen.
-  const activeChartPcts = chartPcts.filter(pct => pct > 0);
-  const chartAchievementRatio = activeChartPcts.length > 0 ? activeChartPcts.reduce((a, b) => a + b, 0) / activeChartPcts.length : 0;
-
   const scopedMembers = MEMBER_LIST.filter(m => !removedIds.has(m.memberId) && (override || m.subgroup === sg.letter));
   // Scale each member's shown attendance so the scoped group's average matches this exam's
   // own percentage, instead of the members' unrelated raw overall pct.
@@ -6600,29 +6644,6 @@ function MonthlyGoalExamDetailScreen({ examName, group, sg, override, examTotals
                 </div>
               </div>
 
-              {/* Monthly goal chart */}
-              <div className="bg-[#f4f6fa] rounded-[16px] p-3 flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-['Noto_Sans',sans-serif] font-medium text-[14px] text-black leading-5" style={ns}>Monthly goal</span>
-                  <span className="font-['Noto_Sans',sans-serif] font-medium text-[14px] text-black leading-5" style={ns}>5.6 K</span>
-                </div>
-                <div className="grid gap-x-1 h-[100px] items-end" style={{ gridTemplateColumns: `repeat(${chartPcts.length}, minmax(0, 1fr))` }}>
-                  {chartPcts.map((pct, i) => (
-                    <div key={i} className="relative h-full w-full rounded-full overflow-hidden bg-[#e3e3e3]">
-                      {pct > 0 && (
-                        <div className="absolute bottom-0 left-0 right-0 rounded-full" style={{ height: `${pct}%`, backgroundColor: zoneBarColor(pct) }} />
-                      )}
-                    </div>
-                  ))}
-                </div>
-                <div className="flex items-center justify-between">
-                  {[1, 10, 20, chartPcts.length].map(day => (
-                    <span key={day} className="font-['Noto_Sans',sans-serif] font-medium text-[10px] text-[#8f8d8d] leading-4" style={ns}>{day}</span>
-                  ))}
-                </div>
-                <span className="text-center font-['Noto_Sans',sans-serif] font-medium text-[12px] text-black leading-4" style={ns}>{chartAchievementRatio.toFixed(1)}% achievement ratio</span>
-              </div>
-
               {/* Member attendance header */}
               <div className="flex items-center justify-between">
                 <span className="font-['Noto_Sans',sans-serif] font-medium text-[16px] text-black tracking-[0.15px] leading-6" style={ns}>Member attendance</span>
@@ -6721,6 +6742,10 @@ function PrototypeApp() {
     date: "24 May 2026",
   });
   const [subgroups, setSubgroups] = useState(SUBGROUPS);
+  // Admin-editable "Monthly goal (exams)" target from Group Settings — defaults to the real
+  // computed monthly capacity (64 members × 120 slots), but the saved value actually drives
+  // the group-level Monthly Goal card/page once changed.
+  const [monthlyGoalTarget, setMonthlyGoalTarget] = useState(MEMBER_LIST.length * EXAM_LIST.length * 30);
   const [selectedExamLive, setSelectedExamLive] = useState(false);
   const [selectedQuickLink, setSelectedQuickLink] = useState<QuickLink | null>(null);
   const [selectedExamList, setSelectedExamList] = useState<Array<{ name: string; isLive: boolean }>>(MANDATORY_EXAMS);
@@ -7003,7 +7028,7 @@ function PrototypeApp() {
           </motion.div>
         )}
 
-        {screen === "adminGroupSettings" && (
+        {screen === "adminGroupSettings" && selectedGroup && (
           <motion.div
             key="adminGroupSettings"
             custom={dir}
@@ -7014,7 +7039,16 @@ function PrototypeApp() {
             transition={slideTrans}
             className="absolute inset-0"
           >
-            <AdminGroupSettingsScreen onBack={goBack} onSave={() => { goBack(); showSnackbar("Group settings saved"); }} />
+            <AdminGroupSettingsScreen
+              group={selectedGroup}
+              monthlyGoalTarget={monthlyGoalTarget}
+              onBack={goBack}
+              onSave={(newMonthlyGoal) => {
+                setMonthlyGoalTarget(newMonthlyGoal);
+                goBack();
+                showSnackbar("Group settings saved");
+              }}
+            />
           </motion.div>
         )}
 
@@ -7289,6 +7323,7 @@ function PrototypeApp() {
               mode="monthly"
               sg={selectedSubgroup}
               override={todayGoalOverride ?? undefined}
+              monthlyGoalTarget={monthlyGoalTarget}
               onBack={goBack}
               onSelectExam={(exam) => { setSelectedExamName(exam.name); setSelectedExamTotals({ total: exam.total, attended: exam.attended }); goTo("monthlyGoalExamDetail"); }}
               onViewAttendance={() => { setMemberAttendanceSubgroupLetter(todayGoalOverride ? null : selectedSubgroup.letter); setMemberAttendanceTargetPct(todayGoalOverride ? null : selectedSubgroup.monthlyGoalPct); goTo("memberAttendance"); }}
