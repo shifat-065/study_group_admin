@@ -4401,6 +4401,43 @@ const MEMBER_LIST: Member[] = [
   { name: "স্বর্ণা জাহান", pct: 84, chip: "green", memberId: "WS167", since: "11 Jun 2024", rating: "A", level: 3, exams: 93, preparingFor: "NTRCA", gender: "Female", birthday: "4 Aug", majorSubject: "Mathematics", institute: "Jagannath University", district: "Cumilla", subgroup: "H" },
 ];
 
+// Members who've joined the group but aren't in a subgroup yet — separate from MEMBER_LIST
+// (which stays at the real 64 enrolled-and-assigned roster) so "Total members" / avg
+// attendance / zone counts don't shift. Only Create Subgroup and Add member draw from this
+// pool, giving those flows real selectable candidates instead of everyone already assigned.
+const UNASSIGNED_MEMBER_POOL: Member[] = [
+  { name: "রাহাত হোসেন", pct: 47.9, chip: "yellow", memberId: "WS166", since: "1 Jan 2022", rating: "C", level: 1, exams: 33, preparingFor: "BCS", gender: "Male", birthday: "1 Jan", majorSubject: "English", institute: "University of Dhaka", district: "Dhaka", subgroup: "" },
+  { name: "সাদিয়া আক্তার", pct: 91, chip: "green", memberId: "WS165", since: "2 Feb 2023", rating: "A", level: 2, exams: 80, preparingFor: "Bank", gender: "Female", birthday: "2 Apr", majorSubject: "Accounting", institute: "Jahangirnagar University", district: "Khulna", subgroup: "" },
+  { name: "ইমরান খান", pct: 41.8, chip: "yellow", memberId: "WS164", since: "3 Mar 2024", rating: "C", level: 3, exams: 93, preparingFor: "NTRCA", gender: "Male", birthday: "3 Jul", majorSubject: "Sociology", institute: "Rajshahi University", district: "Bogura", subgroup: "" },
+  { name: "নুসরাত জাহান", pct: 85.9, chip: "green", memberId: "WS163", since: "4 Apr 2025", rating: "A", level: 1, exams: 165, preparingFor: "DP", gender: "Female", birthday: "4 Oct", majorSubject: "History", institute: "Comilla University", district: "Narayanganj", subgroup: "" },
+  { name: "তানভীর আহমেদ", pct: 79.8, chip: "green", memberId: "WS162", since: "5 May 2022", rating: "B", level: 2, exams: 51, preparingFor: "BAR / BJS", gender: "Male", birthday: "5 Jan", majorSubject: "Chemistry", institute: "Sylhet Agricultural University", district: "Rangpur", subgroup: "" },
+  { name: "মেহেরুন নেসা", pct: 50.8, chip: "yellow", memberId: "WS161", since: "6 Jun 2023", rating: "C", level: 3, exams: 130, preparingFor: "BCS", gender: "Female", birthday: "6 Apr", majorSubject: "Mathematics", institute: "Barishal University", district: "Barishal", subgroup: "" },
+  { name: "আরিফুল ইসলাম", pct: 45.6, chip: "yellow", memberId: "WS160", since: "7 Jul 2024", rating: "C", level: 1, exams: 106, preparingFor: "Bank", gender: "Male", birthday: "7 Jul", majorSubject: "Finance", institute: "Jagannath University", district: "Mymensingh", subgroup: "" },
+  { name: "রুমানা বেগম", pct: 41.3, chip: "yellow", memberId: "WS159", since: "8 Aug 2025", rating: "C", level: 2, exams: 62, preparingFor: "NTRCA", gender: "Female", birthday: "8 Oct", majorSubject: "Economics", institute: "Khulna University", district: "Cumilla", subgroup: "" },
+  { name: "শরিফুল আলম", pct: 85, chip: "green", memberId: "WS158", since: "9 Sep 2022", rating: "A", level: 3, exams: 83, preparingFor: "DP", gender: "Male", birthday: "9 Jan", majorSubject: "Political Science", institute: "Chittagong University", district: "Sylhet", subgroup: "" },
+  { name: "ফারজানা কবির", pct: 75.5, chip: "green", memberId: "WS157", since: "10 Oct 2023", rating: "B", level: 1, exams: 149, preparingFor: "BAR / BJS", gender: "Female", birthday: "10 Apr", majorSubject: "Physics", institute: "Islamic University, Kushtia", district: "Chittagong", subgroup: "" },
+  { name: "মিজানুর রহমান", pct: 64.6, chip: "yellow", memberId: "WS156", since: "11 Nov 2024", rating: "B", level: 2, exams: 160, preparingFor: "BCS", gender: "Male", birthday: "11 Jul", majorSubject: "English", institute: "University of Dhaka", district: "Dhaka", subgroup: "" },
+  { name: "সুমাইয়া খাতুন", pct: 73.7, chip: "yellow", memberId: "WS155", since: "12 Dec 2025", rating: "B", level: 3, exams: 122, preparingFor: "Bank", gender: "Female", birthday: "12 Oct", majorSubject: "Accounting", institute: "Jahangirnagar University", district: "Khulna", subgroup: "" },
+  { name: "জাহিদুল ইসলাম", pct: 70.8, chip: "yellow", memberId: "WS154", since: "13 Jan 2022", rating: "B", level: 1, exams: 102, preparingFor: "NTRCA", gender: "Male", birthday: "13 Jan", majorSubject: "Sociology", institute: "Rajshahi University", district: "Bogura", subgroup: "" },
+  { name: "নাজনীন সুলতানা", pct: 50.5, chip: "yellow", memberId: "WS153", since: "14 Feb 2023", rating: "C", level: 2, exams: 152, preparingFor: "DP", gender: "Female", birthday: "14 Apr", majorSubject: "History", institute: "Comilla University", district: "Narayanganj", subgroup: "" },
+  { name: "রাকিব হাসান", pct: 89.3, chip: "green", memberId: "WS152", since: "15 Mar 2024", rating: "A", level: 3, exams: 100, preparingFor: "BAR / BJS", gender: "Male", birthday: "15 Jul", majorSubject: "Chemistry", institute: "Sylhet Agricultural University", district: "Rangpur", subgroup: "" },
+  { name: "শারমিন আক্তার", pct: 61.7, chip: "yellow", memberId: "WS151", since: "16 Apr 2025", rating: "B", level: 1, exams: 127, preparingFor: "BCS", gender: "Female", birthday: "16 Oct", majorSubject: "Mathematics", institute: "Barishal University", district: "Barishal", subgroup: "" },
+  { name: "ফাহিম মাহমুদ", pct: 79.4, chip: "green", memberId: "WS150", since: "17 May 2022", rating: "B", level: 2, exams: 195, preparingFor: "Bank", gender: "Male", birthday: "17 Jan", majorSubject: "Finance", institute: "Jagannath University", district: "Mymensingh", subgroup: "" },
+  { name: "তাসনিম জাহান", pct: 67.2, chip: "yellow", memberId: "WS149", since: "18 Jun 2023", rating: "B", level: 3, exams: 99, preparingFor: "NTRCA", gender: "Female", birthday: "18 Apr", majorSubject: "Economics", institute: "Khulna University", district: "Cumilla", subgroup: "" },
+  { name: "আসিফ ইকবাল", pct: 74.9, chip: "yellow", memberId: "WS148", since: "19 Jul 2024", rating: "B", level: 1, exams: 84, preparingFor: "DP", gender: "Male", birthday: "19 Jul", majorSubject: "Political Science", institute: "Chittagong University", district: "Sylhet", subgroup: "" },
+  { name: "রোজিনা আক্তার", pct: 86.4, chip: "green", memberId: "WS147", since: "20 Aug 2025", rating: "A", level: 2, exams: 170, preparingFor: "BAR / BJS", gender: "Female", birthday: "20 Oct", majorSubject: "Physics", institute: "Islamic University, Kushtia", district: "Chittagong", subgroup: "" },
+  { name: "নাঈম হোসেন", pct: 53.7, chip: "yellow", memberId: "WS146", since: "21 Sep 2022", rating: "C", level: 3, exams: 204, preparingFor: "BCS", gender: "Male", birthday: "21 Jan", majorSubject: "English", institute: "University of Dhaka", district: "Dhaka", subgroup: "" },
+  { name: "মৌসুমী রানী", pct: 49.4, chip: "yellow", memberId: "WS145", since: "22 Oct 2023", rating: "C", level: 1, exams: 67, preparingFor: "Bank", gender: "Female", birthday: "22 Apr", majorSubject: "Accounting", institute: "Jahangirnagar University", district: "Khulna", subgroup: "" },
+  { name: "সাইফুল ইসলাম", pct: 33.6, chip: "red", memberId: "WS144", since: "23 Nov 2024", rating: "C", level: 2, exams: 151, preparingFor: "NTRCA", gender: "Male", birthday: "23 Jul", majorSubject: "Sociology", institute: "Rajshahi University", district: "Bogura", subgroup: "" },
+  { name: "তানিয়া আফরিন", pct: 74.5, chip: "yellow", memberId: "WS143", since: "24 Dec 2025", rating: "B", level: 3, exams: 81, preparingFor: "DP", gender: "Female", birthday: "24 Oct", majorSubject: "History", institute: "Comilla University", district: "Narayanganj", subgroup: "" },
+  { name: "হাবিবুর রহমান", pct: 57, chip: "yellow", memberId: "WS142", since: "25 Jan 2022", rating: "C", level: 1, exams: 30, preparingFor: "BAR / BJS", gender: "Male", birthday: "25 Jan", majorSubject: "Chemistry", institute: "Sylhet Agricultural University", district: "Rangpur", subgroup: "" },
+  { name: "জান্নাতুল ফেরদৌস", pct: 66.5, chip: "yellow", memberId: "WS141", since: "26 Feb 2023", rating: "B", level: 2, exams: 144, preparingFor: "BCS", gender: "Female", birthday: "26 Apr", majorSubject: "Mathematics", institute: "Barishal University", district: "Barishal", subgroup: "" },
+  { name: "এনামুল হক", pct: 39.2, chip: "red", memberId: "WS140", since: "27 Mar 2024", rating: "C", level: 3, exams: 126, preparingFor: "Bank", gender: "Male", birthday: "27 Jul", majorSubject: "Finance", institute: "Jagannath University", district: "Mymensingh", subgroup: "" },
+  { name: "সাবরিনা ইসলাম", pct: 43.2, chip: "yellow", memberId: "WS139", since: "28 Apr 2025", rating: "C", level: 1, exams: 171, preparingFor: "NTRCA", gender: "Female", birthday: "28 Oct", majorSubject: "Economics", institute: "Khulna University", district: "Cumilla", subgroup: "" },
+  { name: "রেজাউল করিম", pct: 41.8, chip: "yellow", memberId: "WS138", since: "1 May 2022", rating: "C", level: 2, exams: 191, preparingFor: "DP", gender: "Male", birthday: "1 Jan", majorSubject: "Political Science", institute: "Chittagong University", district: "Sylhet", subgroup: "" },
+  { name: "ইশরাত জাহান", pct: 64.2, chip: "yellow", memberId: "WS137", since: "2 Jun 2023", rating: "B", level: 3, exams: 201, preparingFor: "BAR / BJS", gender: "Female", birthday: "2 Apr", majorSubject: "Physics", institute: "Islamic University, Kushtia", district: "Chittagong", subgroup: "" },
+];
+
 const CHIP_STYLES: Record<AttendanceChip, { bg: string; text: string }> = {
   green: { bg: PCT_CHIP_BG.green, text: PCT_CHIP_TEXT },
   yellow: { bg: PCT_CHIP_BG.yellow, text: PCT_CHIP_TEXT },
@@ -5990,10 +6027,11 @@ const MAX_SUBGROUP_MEMBERS = 20;
 
 interface SubgroupCandidate { name: string; pct: number; assignedTo: string | null }
 
-// Draws from the real 64-member roster (each member's actual subgroup letter, if any) instead
-// of a separately invented name list — so this picker can never show someone who doesn't
-// exist in MEMBER_LIST.
-const CREATE_SUBGROUP_CANDIDATES: SubgroupCandidate[] = MEMBER_LIST.map(m => ({
+// Draws from the real 64-member roster plus the unassigned pool (each member's actual
+// subgroup letter, if any) instead of a separately invented name list — so this picker can
+// never show someone who doesn't exist in MEMBER_LIST, and always has real selectable
+// (unassigned) candidates alongside the already-assigned, disabled ones.
+const CREATE_SUBGROUP_CANDIDATES: SubgroupCandidate[] = [...MEMBER_LIST, ...UNASSIGNED_MEMBER_POOL].map(m => ({
   name: m.name,
   pct: m.pct,
   assignedTo: m.subgroup || null,
