@@ -2397,6 +2397,10 @@ function ToggleSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
 // leaving the thin track) keeps the two boundaries at least 1% apart and re-derives the
 // legend rows below from their positions instead of three independent, easily-inconsistent
 // number fields.
+// Vivid traffic-light swatches for the threshold slider/legend — distinct from ZONES.border,
+// which is tuned for text contrast on ZONES.bg card backgrounds, not as a standalone color chip.
+const ZONE_SWATCH = { red: "#ff3232", yellow: "#ffb300", green: "#2eb872" };
+
 function ZoneThresholdSlider({ mid, high, onChange }: { mid: number; high: number; onChange: (mid: number, high: number) => void }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState<"mid" | "high" | null>(null);
@@ -2427,9 +2431,9 @@ function ZoneThresholdSlider({ mid, high, onChange }: { mid: number; high: numbe
     <div className="flex flex-col gap-1 px-4">
       <div ref={trackRef} className="relative h-8 flex items-center touch-none">
         <div className="absolute inset-x-0 h-2 rounded-full overflow-hidden flex">
-          <div className="h-full" style={{ width: `${mid}%`, backgroundColor: ZONES.red.border }} />
-          <div className="h-full" style={{ width: `${high - mid}%`, backgroundColor: ZONES.yellow.border }} />
-          <div className="h-full" style={{ width: `${100 - high}%`, backgroundColor: ZONES.green.border }} />
+          <div className="h-full" style={{ width: `${mid}%`, backgroundColor: ZONE_SWATCH.red }} />
+          <div className="h-full" style={{ width: `${high - mid}%`, backgroundColor: ZONE_SWATCH.yellow }} />
+          <div className="h-full" style={{ width: `${100 - high}%`, backgroundColor: ZONE_SWATCH.green }} />
         </div>
         {ticks.map(t => (
           <div
@@ -2519,9 +2523,9 @@ function AdminGroupSettingsScreen({ onBack, onSave, group, monthlyGoalTarget }: 
             onChange={(mid, high) => { setMidThreshold(mid); setHighThreshold(high); }}
           />
           <div className="flex flex-col gap-2 pt-1">
-            <ZoneThresholdLegendRow color={ZONES.red.border} label="Red zone attendance" range={`0 to ${midThreshold}%`} />
-            <ZoneThresholdLegendRow color={ZONES.yellow.border} label="Yellow zone attendance" range={`${midThreshold + 1} to ${highThreshold}%`} />
-            <ZoneThresholdLegendRow color={ZONES.green.border} label="Green zone attendance" range={`${highThreshold + 1} to 100%`} />
+            <ZoneThresholdLegendRow color={ZONE_SWATCH.red} label="Red zone attendance" range={`0 to ${midThreshold}%`} />
+            <ZoneThresholdLegendRow color={ZONE_SWATCH.yellow} label="Yellow zone attendance" range={`${midThreshold + 1} to ${highThreshold}%`} />
+            <ZoneThresholdLegendRow color={ZONE_SWATCH.green} label="Green zone attendance" range={`${highThreshold + 1} to 100%`} />
           </div>
         </div>
       </div>
