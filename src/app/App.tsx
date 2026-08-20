@@ -4752,17 +4752,9 @@ function AdminMembersHubScreen({ group, memberList, onBack, onTotalMembers, onSe
     return acc;
   }, {} as Record<Zone, number>);
 
-  // The current month's bar always matches the real live total, and months that haven't
-  // happened yet stay empty instead of showing invented future data.
-  const currentMonthIdx = new Date().getMonth();
-  const memberCountBars = MEMBERS_COUNT_BARS.map((bar, i) => {
-    if (i > currentMonthIdx) return { ...bar, count: 0 };
-    if (i === currentMonthIdx) return { ...bar, count: group.members };
-    return bar;
-  });
-  // Bars scale against the platform-wide group member cap (300), not just the tallest bar in
-  // this group's own data — so the chart reads as "how full is this group", not a relative plot.
-  const GROUP_MEMBER_CAP = 300;
+  // Last bar always matches the real current total so the chart and the "Total members" row above it agree.
+  const memberCountBars = MEMBERS_COUNT_BARS.map((bar, i, arr) => i === arr.length - 1 ? { ...bar, count: group.members } : bar);
+  const maxMemberCount = Math.max(...memberCountBars.map(b => b.count));
 
   return (
     <div className="flex flex-col h-full bg-white overflow-hidden relative">
@@ -4780,22 +4772,13 @@ function AdminMembersHubScreen({ group, memberList, onBack, onTotalMembers, onSe
               </div>
             </button>
             <div className="border-t border-[#e3e3e3] mx-3" />
-            <p className="px-3 font-['Noto_Sans',sans-serif] font-medium text-[14px] text-black leading-5">Members, by month (out of {GROUP_MEMBER_CAP})</p>
+            <p className="px-3 font-['Noto_Sans',sans-serif] font-medium text-[14px] text-black leading-5">Members, by month</p>
             <div className="px-3 flex flex-col gap-2">
-              <div className="grid grid-cols-12 gap-1">
+              <div className="grid grid-cols-12 gap-1 h-[116px] items-end">
                 {memberCountBars.map(bar => (
-                  <div key={bar.month} className="flex flex-col items-center gap-1">
-                    {bar.count > 0 && (
-                      <span className="font-['Noto_Sans',sans-serif] font-medium text-[9px] text-[#484848] leading-3">{bar.count}</span>
-                    )}
-                    <div className="relative h-[100px] w-full rounded-full overflow-hidden bg-[#e3e3e3]">
-                      {bar.count > 0 && (
-                        <div
-                          className="absolute bottom-0 left-0 right-0 rounded-full bg-[#1441cc]"
-                          style={{ height: `${(bar.count / GROUP_MEMBER_CAP) * 100}%` }}
-                        />
-                      )}
-                    </div>
+                  <div key={bar.month} className="flex flex-col items-center justify-end gap-1 h-full">
+                    <span className="font-['Noto_Sans',sans-serif] font-medium text-[9px] text-[#484848] leading-3">{bar.count}</span>
+                    <div className="w-full rounded-t-sm bg-[#1441cc]" style={{ height: `${(bar.count / maxMemberCount) * 90}px` }} />
                   </div>
                 ))}
               </div>
