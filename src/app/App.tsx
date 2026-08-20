@@ -2289,8 +2289,8 @@ const DEFAULT_ADMIN_GROUP_RULES_TEXT = `- নিয়মিত পরীক্�
 শুভকামনায়,
 Live MCQ Team.`;
 
-function AdminGroupRulesScreen({ onBack, onSave }: { onBack: () => void; onSave: () => void }) {
-  const [rules, setRules] = useState(DEFAULT_ADMIN_GROUP_RULES_TEXT);
+function AdminGroupRulesScreen({ rulesText, onBack, onSave }: { rulesText: string; onBack: () => void; onSave: (rules: string) => void }) {
+  const [rules, setRules] = useState(rulesText);
 
   return (
     <div className="flex flex-col h-full bg-white overflow-hidden">
@@ -2302,7 +2302,7 @@ function AdminGroupRulesScreen({ onBack, onSave }: { onBack: () => void; onSave:
 
       <div className="shrink-0 p-3">
         <button
-          onClick={onSave}
+          onClick={() => onSave(rules)}
           className="w-full h-14 bg-[#1441cc] rounded-full flex items-center justify-center active:opacity-90 transition-opacity"
         >
           <span className="font-['Noto_Sans',sans-serif] font-medium text-[16px] text-white tracking-[0.15px]">Save</span>
@@ -2332,7 +2332,7 @@ const ADMIN_GROUP_RULES_BODY_TEXT = `- নিয়মিত পরীক্ষ�
 শুভকামনায়,
 Live MCQ Team.`;
 
-function AdminGroupRulesViewScreen({ group, onBack, takingNewMembers }: { group: Group; onBack: () => void; takingNewMembers: boolean }) {
+function AdminGroupRulesViewScreen({ group, onBack, takingNewMembers, rulesText }: { group: Group; onBack: () => void; takingNewMembers: boolean; rulesText: string }) {
   const zoneRows = [
     { color: ZONES.red.border, label: "Red Zone Attendance", value: "10%" },
     { color: ZONES.yellow.border, label: "Yellow Zone Attendance", value: "20%" },
@@ -2385,7 +2385,7 @@ function AdminGroupRulesViewScreen({ group, onBack, takingNewMembers }: { group:
 
         <div className="flex flex-col">
           <p className="font-['Noto_Sans',sans-serif] font-medium text-[14px] text-black leading-5 mb-2">গ্রুপের সাধারণ নিয়মাবলীঃ</p>
-          <p className="font-['Noto_Sans',sans-serif] font-normal text-[14px] text-[#484848] leading-5 whitespace-pre-wrap">{ADMIN_GROUP_RULES_BODY_TEXT}</p>
+          <p className="font-['Noto_Sans',sans-serif] font-normal text-[14px] text-[#484848] leading-5 whitespace-pre-wrap">{rulesText}</p>
         </div>
       </div>
     </div>
@@ -7002,6 +7002,7 @@ function PrototypeApp() {
   // computed monthly capacity (64 members × 120 slots), but the saved value actually drives
   // the group-level Monthly Goal card/page once changed.
   const [monthlyGoalTarget, setMonthlyGoalTarget] = useState(INITIAL_MEMBER_LIST.length * EXAM_LIST.length * 30);
+  const [groupRulesText, setGroupRulesText] = useState(ADMIN_GROUP_RULES_BODY_TEXT);
   // Group Settings' "Taking new members" toggle — when off, the "Open to Join" badge
   // switches to "Not accepting members" everywhere it's shown across the admin screens.
   const [takingNewMembers, setTakingNewMembers] = useState(true);
@@ -7132,7 +7133,7 @@ function PrototypeApp() {
             transition={slideTrans}
             className="absolute inset-0"
           >
-            <AdminGroupRulesViewScreen group={selectedGroup} takingNewMembers={takingNewMembers} onBack={goBack} />
+            <AdminGroupRulesViewScreen group={selectedGroup} takingNewMembers={takingNewMembers} rulesText={groupRulesText} onBack={goBack} />
           </motion.div>
         )}
 
@@ -7328,7 +7329,7 @@ function PrototypeApp() {
             transition={slideTrans}
             className="absolute inset-0"
           >
-            <AdminGroupRulesScreen onBack={goBack} onSave={() => { goBack(); showSnackbar("Group rules saved"); }} />
+            <AdminGroupRulesScreen rulesText={groupRulesText} onBack={goBack} onSave={(rules) => { setGroupRulesText(rules); goBack(); showSnackbar("Group rules saved"); }} />
           </motion.div>
         )}
 
