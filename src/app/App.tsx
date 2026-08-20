@@ -2748,7 +2748,7 @@ const EXAM_CUSTOM_CATEGORIES: ExamCustomCategory[] = [
   },
 ];
 
-function AdminExamCustomisationScreen({ onBack, onSave }: { onBack: () => void; onSave: () => void }) {
+function AdminExamCustomisationScreen({ onBack, onSave, memberCount }: { onBack: () => void; onSave: () => void; memberCount: number }) {
   const [categories, setCategories] = useState(EXAM_CUSTOM_CATEGORIES);
 
   function toggleExpanded(categoryId: string) {
@@ -2764,6 +2764,10 @@ function AdminExamCustomisationScreen({ onBack, onSave }: { onBack: () => void; 
   }
 
   const totalButtons = categories.reduce((sum, c) => sum + c.items.filter(i => i.checked).length, 0);
+  // Total exams per month = total buttons × total members × days in the current month.
+  const now = new Date();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const totalExamsPerMonth = totalButtons * memberCount * daysInMonth;
 
   return (
     <div className="flex flex-col h-full bg-white overflow-hidden">
@@ -2826,7 +2830,7 @@ function AdminExamCustomisationScreen({ onBack, onSave }: { onBack: () => void; 
           </div>
           <div className="flex items-center justify-between">
             <span className="font-['Noto_Sans',sans-serif] text-[14px] text-black leading-5">Total exams per month*</span>
-            <span className="font-['Noto_Sans',sans-serif] text-[14px] text-black leading-5">24</span>
+            <span className="font-['Noto_Sans',sans-serif] text-[14px] text-black leading-5">{totalExamsPerMonth.toLocaleString()}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="font-['Noto_Sans',sans-serif] text-[14px] text-black leading-5">Monthly achievable goal*</span>
@@ -7244,7 +7248,7 @@ function PrototypeApp() {
             transition={slideTrans}
             className="absolute inset-0"
           >
-            <AdminExamCustomisationScreen onBack={goBack} onSave={() => { goBack(); showSnackbar("Exam customisation saved"); }} />
+            <AdminExamCustomisationScreen onBack={goBack} memberCount={memberList.length} onSave={() => { goBack(); showSnackbar("Exam customisation saved"); }} />
           </motion.div>
         )}
 
