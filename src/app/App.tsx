@@ -4752,8 +4752,14 @@ function AdminMembersHubScreen({ group, memberList, onBack, onTotalMembers, onSe
     return acc;
   }, {} as Record<Zone, number>);
 
-  // Last bar always matches the real current total so the chart and the "Total members" row above it agree.
-  const memberCountBars = MEMBERS_COUNT_BARS.map((bar, i, arr) => i === arr.length - 1 ? { ...bar, count: group.members } : bar);
+  // The current month's bar always matches the real live total, and months that haven't
+  // happened yet stay empty instead of showing invented future data.
+  const currentMonthIdx = new Date().getMonth();
+  const memberCountBars = MEMBERS_COUNT_BARS.map((bar, i) => {
+    if (i > currentMonthIdx) return { ...bar, count: 0 };
+    if (i === currentMonthIdx) return { ...bar, count: group.members };
+    return bar;
+  });
   const maxMemberCount = Math.max(...memberCountBars.map(b => b.count));
 
   return (
@@ -4777,7 +4783,9 @@ function AdminMembersHubScreen({ group, memberList, onBack, onTotalMembers, onSe
               <div className="grid grid-cols-12 gap-1 h-[116px] items-end">
                 {memberCountBars.map(bar => (
                   <div key={bar.month} className="flex flex-col items-center justify-end gap-1 h-full">
-                    <span className="font-['Noto_Sans',sans-serif] font-medium text-[9px] text-[#484848] leading-3">{bar.count}</span>
+                    {bar.count > 0 && (
+                      <span className="font-['Noto_Sans',sans-serif] font-medium text-[9px] text-[#484848] leading-3">{bar.count}</span>
+                    )}
                     <div className="w-full rounded-t-sm bg-[#1441cc]" style={{ height: `${(bar.count / maxMemberCount) * 90}px` }} />
                   </div>
                 ))}
