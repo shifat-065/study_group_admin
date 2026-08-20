@@ -5664,7 +5664,7 @@ function ActivityProgressBar({ pct }: { pct: number }) {
   );
 }
 
-function CaptainDetailsBottomSheet({ sg, onClose, onEdit }: { sg: SubgroupData; onClose: () => void; onEdit: () => void }) {
+function CaptainDetailsBottomSheet({ sg, onClose, onEdit }: { sg: SubgroupData; onClose: () => void; onEdit?: () => void }) {
   const ns = { fontVariationSettings: '"CTGR" 0, "wdth" 100' };
   return (
     <motion.div
@@ -5689,9 +5689,11 @@ function CaptainDetailsBottomSheet({ sg, onClose, onEdit }: { sg: SubgroupData; 
 
         <div className="flex items-center justify-between px-4 pb-4 shrink-0">
           <p className="font-['Noto_Sans',sans-serif] font-normal text-[24px] leading-[32px] text-black" style={ns}>Captain Details</p>
-          <button onClick={onEdit} aria-label="Edit" className="size-10 flex items-center justify-center rounded-full active:bg-gray-100 transition-colors">
-            <Pencil className="size-5 text-[#484848]" strokeWidth={1.5} />
-          </button>
+          {onEdit && (
+            <button onClick={onEdit} aria-label="Edit" className="size-10 flex items-center justify-center rounded-full active:bg-gray-100 transition-colors">
+              <Pencil className="size-5 text-[#484848]" strokeWidth={1.5} />
+            </button>
+          )}
         </div>
 
         <div className="border-t border-[#e3e3e3]" />
@@ -5792,7 +5794,7 @@ function ChooseCaptainBottomSheet({ current, onCancel, onSave }: { current: stri
   );
 }
 
-function SubgroupDetailScreen({ onBack, sg, groupName, onTodayGoal, onMonthlyGoal, onAddMember, onCaptainSaved, onDelete }: { onBack: () => void; sg: SubgroupData; groupName: string; onTodayGoal: () => void; onMonthlyGoal: () => void; onAddMember: () => void; onCaptainSaved: (name: string) => void; onDelete: () => void }) {
+function SubgroupDetailScreen({ onBack, sg, groupName, onTodayGoal, onMonthlyGoal, onAddMember, onCaptainSaved, onDelete, isAdmin }: { onBack: () => void; sg: SubgroupData; groupName: string; onTodayGoal: () => void; onMonthlyGoal: () => void; onAddMember: () => void; onCaptainSaved: (name: string) => void; onDelete: () => void; isAdmin?: boolean }) {
   const ns = { fontVariationSettings: '"CTGR" 0, "wdth" 100' };
   const [sortBy, setSortBy] = useState<MemberSort>("attendance");
   const [sorting, setSorting] = useState(false);
@@ -5875,10 +5877,10 @@ function SubgroupDetailScreen({ onBack, sg, groupName, onTodayGoal, onMonthlyGoa
           <CaptainDetailsBottomSheet
             sg={sg}
             onClose={() => setShowCaptain(false)}
-            onEdit={() => { setShowCaptain(false); setChoosingCaptain(true); }}
+            onEdit={isAdmin ? () => { setShowCaptain(false); setChoosingCaptain(true); } : undefined}
           />
         )}
-        {choosingCaptain && (
+        {isAdmin && choosingCaptain && (
           <ChooseCaptainBottomSheet
             current={sg.captain}
             onCancel={() => setChoosingCaptain(false)}
@@ -5888,12 +5890,12 @@ function SubgroupDetailScreen({ onBack, sg, groupName, onTodayGoal, onMonthlyGoa
         {selected && (
           <MemberDetailSheet
             member={selected}
-            isAdmin
-            onRemove={() => { setRemoving(selected); setSelected(null); }}
+            isAdmin={isAdmin}
+            onRemove={isAdmin ? () => { setRemoving(selected); setSelected(null); } : undefined}
             onClose={() => setSelected(null)}
           />
         )}
-        {removing && (
+        {isAdmin && removing && (
           <RemoveFromSubgroupDialog
             firstName={removing.name.split(" ")[0]}
             subgroupLetter={sg.letter}
@@ -5905,7 +5907,7 @@ function SubgroupDetailScreen({ onBack, sg, groupName, onTodayGoal, onMonthlyGoa
             }}
           />
         )}
-        {showDeleteConfirm && (
+        {isAdmin && showDeleteConfirm && (
           <DeleteSubgroupDialog
             onCancel={() => setShowDeleteConfirm(false)}
             onConfirm={() => { setShowDeleteConfirm(false); onDelete(); }}
@@ -5927,28 +5929,30 @@ function SubgroupDetailScreen({ onBack, sg, groupName, onTodayGoal, onMonthlyGoa
         >
           Subgroup
         </p>
-        <div className="ml-auto relative">
-          <button
-            onClick={() => setShowMenu(v => !v)}
-            aria-label="Subgroup options"
-            className="size-12 flex items-center justify-center rounded-full active:bg-gray-100 transition-colors"
-          >
-            <MoreVertical className="size-6 text-[#484848]" strokeWidth={2} />
-          </button>
-          {showMenu && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-              <div className="absolute right-0 top-12 z-50 bg-white rounded-[8px] shadow-[0px_4px_8px_3px_rgba(0,0,0,0.15)] py-1 min-w-[180px]">
-                <button
-                  onClick={() => { setShowMenu(false); setShowDeleteConfirm(true); }}
-                  className="w-full h-11 flex items-center px-4 active:bg-gray-50 transition-colors text-left whitespace-nowrap"
-                >
-                  <span className="font-['Noto_Sans',sans-serif] font-normal text-[16px] text-black leading-6" style={ns}>Delete subgroup</span>
-                </button>
-              </div>
-            </>
-          )}
-        </div>
+        {isAdmin && (
+          <div className="ml-auto relative">
+            <button
+              onClick={() => setShowMenu(v => !v)}
+              aria-label="Subgroup options"
+              className="size-12 flex items-center justify-center rounded-full active:bg-gray-100 transition-colors"
+            >
+              <MoreVertical className="size-6 text-[#484848]" strokeWidth={2} />
+            </button>
+            {showMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
+                <div className="absolute right-0 top-12 z-50 bg-white rounded-[8px] shadow-[0px_4px_8px_3px_rgba(0,0,0,0.15)] py-1 min-w-[180px]">
+                  <button
+                    onClick={() => { setShowMenu(false); setShowDeleteConfirm(true); }}
+                    className="w-full h-11 flex items-center px-4 active:bg-gray-50 transition-colors text-left whitespace-nowrap"
+                  >
+                    <span className="font-['Noto_Sans',sans-serif] font-normal text-[16px] text-black leading-6" style={ns}>Delete subgroup</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Scrollable body */}
@@ -6098,11 +6102,13 @@ function SubgroupDetailScreen({ onBack, sg, groupName, onTodayGoal, onMonthlyGoa
         </div>
       </div>
 
-      <div className="shrink-0 p-3">
-        <button onClick={onAddMember} className="w-full h-14 bg-[#1441cc] rounded-full flex items-center justify-center active:opacity-90 transition-opacity">
-          <span className="font-['Noto_Sans',sans-serif] font-medium text-[16px] text-white tracking-[0.15px]">Add member</span>
-        </button>
-      </div>
+      {isAdmin && (
+        <div className="shrink-0 p-3">
+          <button onClick={onAddMember} className="w-full h-14 bg-[#1441cc] rounded-full flex items-center justify-center active:opacity-90 transition-opacity">
+            <span className="font-['Noto_Sans',sans-serif] font-medium text-[16px] text-white tracking-[0.15px]">Add member</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -7109,7 +7115,7 @@ function PrototypeApp() {
               onActivityLog={() => goTo("activity")}
               onRank={() => goTo("rank")}
               onMembers={() => { setMembersAdminMode(false); goTo("members"); }}
-              onSubgroups={() => { setSubgroupsAdminMode(true); setSubgroupsFromAdminPanel(false); goTo("subgroups"); }}
+              onSubgroups={() => { setSubgroupsAdminMode(false); setSubgroupsFromAdminPanel(false); goTo("subgroups"); }}
               onTodayGoal={() => { setSelectedSubgroup(subgroups.find(s => s.isMyGroup) ?? subgroups[0]); setTodayGoalOverride(computeGroupGoalAggregate(subgroups, "today")); goTo("todayGoal"); }}
               onMonthlyGoal={() => { setSelectedSubgroup(subgroups.find(s => s.isMyGroup) ?? subgroups[0]); setTodayGoalOverride(computeGroupGoalAggregate(subgroups, "monthly")); goTo("monthlyGoal"); }}
               onDiscussion={() => goTo("discussion")}
@@ -7531,6 +7537,7 @@ function PrototypeApp() {
             <SubgroupDetailScreen
               sg={selectedSubgroup}
               groupName={selectedGroup?.name ?? ""}
+              isAdmin={subgroupsFromAdminPanel}
               onBack={goBack}
               onTodayGoal={() => { setTodayGoalOverride(null); goTo("todayGoal"); }}
               onMonthlyGoal={() => { setTodayGoalOverride(null); goTo("monthlyGoal"); }}
