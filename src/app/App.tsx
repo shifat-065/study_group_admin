@@ -4760,7 +4760,9 @@ function AdminMembersHubScreen({ group, memberList, onBack, onTotalMembers, onSe
     if (i === currentMonthIdx) return { ...bar, count: group.members };
     return bar;
   });
-  const maxMemberCount = Math.max(...memberCountBars.map(b => b.count));
+  // Bars scale against the platform-wide group member cap (300), not just the tallest bar in
+  // this group's own data — so the chart reads as "how full is this group", not a relative plot.
+  const GROUP_MEMBER_CAP = 300;
 
   return (
     <div className="flex flex-col h-full bg-white overflow-hidden relative">
@@ -4778,7 +4780,7 @@ function AdminMembersHubScreen({ group, memberList, onBack, onTotalMembers, onSe
               </div>
             </button>
             <div className="border-t border-[#e3e3e3] mx-3" />
-            <p className="px-3 font-['Noto_Sans',sans-serif] font-medium text-[14px] text-black leading-5">Members, by month</p>
+            <p className="px-3 font-['Noto_Sans',sans-serif] font-medium text-[14px] text-black leading-5">Members, by month (out of {GROUP_MEMBER_CAP})</p>
             <div className="px-3 flex flex-col gap-2">
               <div className="grid grid-cols-12 gap-1 h-[116px] items-end">
                 {memberCountBars.map(bar => (
@@ -4786,7 +4788,7 @@ function AdminMembersHubScreen({ group, memberList, onBack, onTotalMembers, onSe
                     {bar.count > 0 && (
                       <span className="font-['Noto_Sans',sans-serif] font-medium text-[9px] text-[#484848] leading-3">{bar.count}</span>
                     )}
-                    <div className="w-full rounded-t-sm bg-[#1441cc]" style={{ height: `${(bar.count / maxMemberCount) * 90}px` }} />
+                    <div className="w-full rounded-t-sm bg-[#1441cc]" style={{ height: `${(bar.count / GROUP_MEMBER_CAP) * 90}px` }} />
                   </div>
                 ))}
               </div>
