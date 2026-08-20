@@ -4782,13 +4782,15 @@ function AdminMembersHubScreen({ group, memberList, onBack, onTotalMembers, onSe
             <div className="border-t border-[#e3e3e3] mx-3" />
             <p className="px-3 font-['Noto_Sans',sans-serif] font-medium text-[14px] text-black leading-5">Members, by month (out of {GROUP_MEMBER_CAP})</p>
             <div className="px-3 flex flex-col gap-2">
-              <div className="grid grid-cols-12 gap-1 h-[116px] items-end">
+              <div className="grid grid-cols-12 gap-1 h-[100px]">
                 {memberCountBars.map(bar => (
-                  <div key={bar.month} className="flex flex-col items-center justify-end gap-1 h-full">
+                  <div key={bar.month} className="relative h-full w-full rounded-full overflow-hidden bg-[#e3e3e3]">
                     {bar.count > 0 && (
-                      <span className="font-['Noto_Sans',sans-serif] font-medium text-[9px] text-[#484848] leading-3">{bar.count}</span>
+                      <div
+                        className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 size-2 rounded-full bg-[#f04d30]"
+                        style={{ bottom: `${(bar.count / GROUP_MEMBER_CAP) * 100}%` }}
+                      />
                     )}
-                    <div className="w-full rounded-t-sm bg-[#1441cc]" style={{ height: `${(bar.count / GROUP_MEMBER_CAP) * 90}px` }} />
                   </div>
                 ))}
               </div>
