@@ -5220,7 +5220,12 @@ function GroupMembersScreen({ onBack, group, memberList, onRemoveMember, zone, i
           // attendance-based color — a new member's short attendance history isn't a fair
           // green/yellow/red judgment yet. Applies everywhere this row renders, not just the
           // dedicated Probational zone screen.
-          const chip = ZONES.probation.match(member) ? { bg: ZONES.probation.bg, text: ZONES.probation.text } : CHIP_STYLES[pctToChip(member.pct)];
+          // Otherwise the chip's red/yellow/green bucket must match ZONES' own thresholds
+          // (<60 / 60-79 / 80+) rather than pctToChip's different cutoffs — a member sitting
+          // in the Red zone list must not show a yellow chip.
+          const chip = ZONES.probation.match(member)
+            ? { bg: ZONES.probation.bg, text: ZONES.probation.text }
+            : CHIP_STYLES[member.pct >= 80 ? "green" : member.pct >= 60 ? "yellow" : "red"];
           const showSubgroupHeader = sortBy === "subgroup" && (i === 0 || filtered[i - 1].subgroup !== member.subgroup);
           return (
             <div key={member.memberId}>
