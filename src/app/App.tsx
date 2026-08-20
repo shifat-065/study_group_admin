@@ -642,13 +642,41 @@ const RESULT_EXAMS: ResultExamItem[] = [
   },
 ];
 
+// Generic empty state for a not-yet-implemented action — same look as QuickLinkPageScreen's
+// fallback, reused wherever a button needs somewhere real to go instead of doing nothing.
+function NoDataScreen({ title, Icon, onBack }: { title: string; Icon: LucideIcon; onBack: () => void }) {
+  return (
+    <div className="flex flex-col h-full bg-white overflow-hidden">
+      <AppHeader title={title} onBack={onBack} />
+      <div className="flex-1 flex flex-col items-center justify-center gap-4 px-8 -mt-12">
+        <div className="size-16 rounded-full bg-[#f4f6fa] flex items-center justify-center">
+          <Icon className="size-7 text-[#787878]" strokeWidth={1.5} />
+        </div>
+        <div className="flex flex-col gap-1 items-center">
+          <p className="font-['Noto_Sans',sans-serif] font-medium text-[16px] text-black leading-[24px] text-center" style={{ fontVariationSettings: '"CTGR" 0, "wdth" 100' }}>
+            No data right now
+          </p>
+          <p className="font-['Noto_Sans',sans-serif] font-normal text-[14px] text-[#787878] leading-[20px] text-center" style={{ fontVariationSettings: '"CTGR" 0, "wdth" 100' }}>
+            Exams will be added very soon.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // High-fidelity Result Screen matching Mobile/Study Group / Admin / Result Figma design (Demo)
 function ResultScreen({ onBack }: { onBack: () => void }) {
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
+  const [noData, setNoData] = useState<{ title: string; Icon: LucideIcon } | null>(null);
 
   const toggleExpand = (id: string) => {
     setExpandedCards(prev => ({ ...prev, [id]: !prev[id] }));
   };
+
+  if (noData) {
+    return <NoDataScreen title={noData.title} Icon={noData.Icon} onBack={() => setNoData(null)} />;
+  }
 
   return (
     <div className="flex flex-col h-full bg-white overflow-hidden relative">
@@ -658,12 +686,18 @@ function ResultScreen({ onBack }: { onBack: () => void }) {
         onBack={onBack}
         trailing={
           <div className="flex items-center gap-1">
-            <div className="size-10 flex items-center justify-center">
+            <button
+              onClick={() => setNoData({ title: "Calendar", Icon: CalendarDays })}
+              className="size-10 flex items-center justify-center rounded-full active:bg-gray-100 transition-colors"
+            >
               <CalendarDays className="size-5 text-[#484848]" strokeWidth={1.75} />
-            </div>
-            <div className="size-10 flex items-center justify-center">
+            </button>
+            <button
+              onClick={() => setNoData({ title: "Filter", Icon: Filter })}
+              className="size-10 flex items-center justify-center rounded-full active:bg-gray-100 transition-colors"
+            >
               <Filter className="size-5 text-[#484848]" strokeWidth={1.75} />
-            </div>
+            </button>
           </div>
         }
       />
@@ -719,25 +753,34 @@ function ResultScreen({ onBack }: { onBack: () => void }) {
               )}
             </p>
 
-            {/* Card Footer Actions (display only) */}
+            {/* Card Footer Actions */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-[14px] font-['Noto_Sans',sans-serif] font-medium text-black">
+              <button
+                onClick={() => setNoData({ title: "Study materials", Icon: FileText })}
+                className="flex items-center gap-2 text-[14px] font-['Noto_Sans',sans-serif] font-medium text-black active:opacity-70 transition-opacity"
+              >
                 <Pencil className="size-4 text-[#1441cc]" />
                 <span>Study materials (8)</span>
                 <span className="w-0 h-0 border-y-[4px] border-y-transparent border-l-[6px] border-l-[#1441cc] ml-0.5" />
-              </div>
+              </button>
               <div className="flex items-center gap-2.5">
                 {RESULT_EXAMS[0].hasSlideshow && <PlaySquare className="size-5 text-[#484848]" strokeWidth={1.5} />}
                 {RESULT_EXAMS[0].hasPdf && <FileSpreadsheet className="size-5 text-[#484848]" />}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2 pt-1">
-              <div className="h-[48px] border border-[#c7c7c7] bg-white rounded-[8px] flex items-center justify-center font-['Noto_Sans',sans-serif] font-medium text-[14px] text-[#484848]">
+              <button
+                onClick={() => setNoData({ title: "উত্তরপত্র", Icon: ClipboardCheck })}
+                className="h-[48px] border border-[#c7c7c7] bg-white rounded-[8px] flex items-center justify-center font-['Noto_Sans',sans-serif] font-medium text-[14px] text-[#484848] active:opacity-70 transition-opacity"
+              >
                 উত্তরপত্র
-              </div>
-              <div className="h-[48px] bg-[#1441cc] rounded-[8px] flex items-center justify-center font-['Noto_Sans',sans-serif] font-medium text-[14px] text-white">
+              </button>
+              <button
+                onClick={() => setNoData({ title: "মার্কশিট", Icon: FileSpreadsheet })}
+                className="h-[48px] bg-[#1441cc] rounded-[8px] flex items-center justify-center font-['Noto_Sans',sans-serif] font-medium text-[14px] text-white active:opacity-90 transition-opacity"
+              >
                 মার্কশিট
-              </div>
+              </button>
             </div>
           </div>
 
@@ -767,23 +810,32 @@ function ResultScreen({ onBack }: { onBack: () => void }) {
             </p>
 
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-[14px] font-['Noto_Sans',sans-serif] font-medium text-black">
+              <button
+                onClick={() => setNoData({ title: "Study materials", Icon: FileText })}
+                className="flex items-center gap-2 text-[14px] font-['Noto_Sans',sans-serif] font-medium text-black active:opacity-70 transition-opacity"
+              >
                 <Pencil className="size-4 text-[#1441cc]" />
                 <span>Study materials (11)</span>
                 <span className="w-0 h-0 border-y-[4px] border-y-transparent border-l-[6px] border-l-[#1441cc] ml-0.5" />
-              </div>
+              </button>
               <div className="flex items-center gap-2.5">
                 {RESULT_EXAMS[1].hasPdf && <FileSpreadsheet className="size-5 text-[#484848]" />}
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2 pt-1">
-              <div className="h-[48px] border border-[#c7c7c7] bg-white rounded-[8px] flex items-center justify-center font-['Noto_Sans',sans-serif] font-medium text-[14px] text-[#484848]">
+              <button
+                onClick={() => setNoData({ title: "উত্তরপত্র", Icon: ClipboardCheck })}
+                className="h-[48px] border border-[#c7c7c7] bg-white rounded-[8px] flex items-center justify-center font-['Noto_Sans',sans-serif] font-medium text-[14px] text-[#484848] active:opacity-70 transition-opacity"
+              >
                 উত্তরপত্র
-              </div>
-              <div className="h-[48px] bg-[#1441cc] rounded-[8px] flex items-center justify-center font-['Noto_Sans',sans-serif] font-medium text-[14px] text-white">
+              </button>
+              <button
+                onClick={() => setNoData({ title: "মার্কশিট", Icon: FileSpreadsheet })}
+                className="h-[48px] bg-[#1441cc] rounded-[8px] flex items-center justify-center font-['Noto_Sans',sans-serif] font-medium text-[14px] text-white active:opacity-90 transition-opacity"
+              >
                 মার্কশিট
-              </div>
+              </button>
             </div>
           </div>
 
@@ -821,23 +873,32 @@ function ResultScreen({ onBack }: { onBack: () => void }) {
             </p>
 
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-[14px] font-['Noto_Sans',sans-serif] font-medium text-black">
+              <button
+                onClick={() => setNoData({ title: "Study materials", Icon: FileText })}
+                className="flex items-center gap-2 text-[14px] font-['Noto_Sans',sans-serif] font-medium text-black active:opacity-70 transition-opacity"
+              >
                 <Pencil className="size-4 text-[#1441cc]" />
                 <span>Study materials (5)</span>
                 <span className="w-0 h-0 border-y-[4px] border-y-transparent border-l-[6px] border-l-[#1441cc] ml-0.5" />
-              </div>
+              </button>
               <div className="flex items-center gap-2.5">
                 {RESULT_EXAMS[2].hasSlideshow && <PlaySquare className="size-5 text-[#484848]" strokeWidth={1.5} />}
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2 pt-1">
-              <div className="h-[48px] border border-[#c7c7c7] bg-white rounded-[8px] flex items-center justify-center font-['Noto_Sans',sans-serif] font-medium text-[14px] text-[#484848]">
+              <button
+                onClick={() => setNoData({ title: "উত্তরপত্র", Icon: ClipboardCheck })}
+                className="h-[48px] border border-[#c7c7c7] bg-white rounded-[8px] flex items-center justify-center font-['Noto_Sans',sans-serif] font-medium text-[14px] text-[#484848] active:opacity-70 transition-opacity"
+              >
                 উত্তরপত্র
-              </div>
-              <div className="h-[48px] bg-[#1441cc] rounded-[8px] flex items-center justify-center font-['Noto_Sans',sans-serif] font-medium text-[14px] text-white">
+              </button>
+              <button
+                onClick={() => setNoData({ title: "মার্কশিট", Icon: FileSpreadsheet })}
+                className="h-[48px] bg-[#1441cc] rounded-[8px] flex items-center justify-center font-['Noto_Sans',sans-serif] font-medium text-[14px] text-white active:opacity-90 transition-opacity"
+              >
                 মার্কশিট
-              </div>
+              </button>
             </div>
           </div>
         </div>
