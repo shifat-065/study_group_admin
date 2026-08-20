@@ -4746,8 +4746,9 @@ function zoneBarColor(pct: number) {
 }
 
 function AdminMembersHubScreen({ group, memberList, onBack, onTotalMembers, onSelectZone, onAddMember }: { group: Group; memberList: Member[]; onBack: () => void; onTotalMembers: () => void; onSelectZone: (zone: Zone) => void; onAddMember: () => void }) {
+  // Probation takes exclusive precedence over the attendance zones, matching the list screen.
   const zoneCounts = (Object.keys(ZONES) as Zone[]).reduce((acc, zone) => {
-    acc[zone] = memberList.filter(m => ZONES[zone].match(m)).length;
+    acc[zone] = memberList.filter(m => ZONES[zone].match(m) && (zone === "probation" || !ZONES.probation.match(m))).length;
     return acc;
   }, {} as Record<Zone, number>);
 
@@ -5118,7 +5119,11 @@ function GroupMembersScreen({ onBack, group, memberList, onRemoveMember, zone, i
       return { ...m, pct, chip: pctToChip(pct) };
     });
   })();
-  const base = zoneConfig ? remaining.filter(m => zoneConfig.match(m)) : remaining;
+  // Probation takes exclusive precedence over the attendance zones — a probational member
+  // shows up only in the Probational zone list, not also in Red/Yellow/Green.
+  const base = zoneConfig
+    ? remaining.filter(m => zoneConfig.match(m) && (zone === "probation" || !ZONES.probation.match(m)))
+    : remaining;
   const filtered = (query.trim() ? base.filter(m => m.name.toLowerCase().includes(query.trim().toLowerCase())) : base)
     .slice()
     .sort((a, b) => {
