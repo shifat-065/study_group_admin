@@ -4256,7 +4256,7 @@ function GroupRankContent({ monthIndex, selectedMonth }: { monthIndex: number; s
         <div className="bg-white rounded-[16px] border border-[#e3e3e3] p-3 flex flex-col gap-4">
           <div className="flex gap-3 items-start">
             <div className="relative shrink-0 size-[60px]">
-              <GroupAvatar size={60} />
+              <GroupLogo size={60} seed={GROUPS[0].id} />
             </div>
             <div className="flex flex-col gap-2 flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
