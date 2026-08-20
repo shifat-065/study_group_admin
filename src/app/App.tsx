@@ -5216,7 +5216,10 @@ function GroupMembersScreen({ onBack, group, memberList, onRemoveMember, zone, i
       {/* Member list */}
       <div className="flex-1 overflow-y-auto">
         {filtered.map((member, i) => {
-          const chip = CHIP_STYLES[pctToChip(member.pct)];
+          // Probational zone chips always show the zone's own blue, not the usual
+          // attendance-based color — a new member's short attendance history isn't a fair
+          // green/yellow/red judgment yet.
+          const chip = zone === "probation" ? { bg: ZONES.probation.bg, text: ZONES.probation.text } : CHIP_STYLES[pctToChip(member.pct)];
           const showSubgroupHeader = sortBy === "subgroup" && (i === 0 || filtered[i - 1].subgroup !== member.subgroup);
           return (
             <div key={member.memberId}>
