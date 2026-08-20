@@ -6231,7 +6231,7 @@ function SubgroupListScreen({ onBack, group, subgroups, onDetail, onCreateNew, f
 
 // ── Screen: Admin / Create Subgroup ─────────────────────────────────────────────
 
-const MAX_SUBGROUP_MEMBERS = 20;
+const MAX_SUBGROUP_MEMBERS = 300;
 
 interface SubgroupCandidate { name: string; pct: number; assignedTo: string | null }
 
