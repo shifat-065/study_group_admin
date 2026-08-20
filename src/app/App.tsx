@@ -4787,8 +4787,8 @@ function AdminMembersHubScreen({ group, memberList, onBack, onTotalMembers, onSe
                   <div key={bar.month} className="relative h-full w-full rounded-full overflow-hidden bg-[#e3e3e3]">
                     {bar.count > 0 && (
                       <div
-                        className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 size-2 rounded-full bg-[#f04d30]"
-                        style={{ bottom: `${(bar.count / GROUP_MEMBER_CAP) * 100}%` }}
+                        className="absolute bottom-0 left-0 right-0 rounded-full bg-[#1441cc]"
+                        style={{ height: `${(bar.count / GROUP_MEMBER_CAP) * 100}%` }}
                       />
                     )}
                   </div>
