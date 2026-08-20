@@ -7108,7 +7108,7 @@ function PrototypeApp() {
               onBack={goBack}
               onActivityLog={() => goTo("activity")}
               onRank={() => goTo("rank")}
-              onMembers={() => { setMembersAdminMode(true); goTo("members"); }}
+              onMembers={() => { setMembersAdminMode(false); goTo("members"); }}
               onSubgroups={() => { setSubgroupsAdminMode(true); setSubgroupsFromAdminPanel(false); goTo("subgroups"); }}
               onTodayGoal={() => { setSelectedSubgroup(subgroups.find(s => s.isMyGroup) ?? subgroups[0]); setTodayGoalOverride(computeGroupGoalAggregate(subgroups, "today")); goTo("todayGoal"); }}
               onMonthlyGoal={() => { setSelectedSubgroup(subgroups.find(s => s.isMyGroup) ?? subgroups[0]); setTodayGoalOverride(computeGroupGoalAggregate(subgroups, "monthly")); goTo("monthlyGoal"); }}
